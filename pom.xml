@@ -1,0 +1,39 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.argus</groupId>
+    <artifactId>argus</artifactId>
+    <version>1.0.0</version>
+    <name>argus</name>
+    <description>
+        ARGUS
+        The All-Seeing Runtime for Web Knowledge Ingestion and AI Agents.
+        ARGUS is a production-grade Java runtime designed for auditable, controllable, and reproducible web ingestion in
+        agent-based systems.
+        ---
+        ARGUS
+        面向网络知识获取与AI代理的全视运行时。
+        ARGUS 是一个生产级的 Java 运行时，专为基于代理的系统中可审计、可控制和可复现的网络数据获取而设计。
+    </description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>argus-core</module>
+        <module>argus-ingestion</module>
+        <module>argus-agent</module>
+        <module>argus-runtime</module>
+    </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

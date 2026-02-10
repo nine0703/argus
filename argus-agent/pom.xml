@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.example</groupId>
+        <artifactId>argus</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>argus-agent</artifactId>
+    <version>1.0.0</version>
+    <name>argus-agent</name>
+    <description>
+        ARGUS Agent
+        ARGUS 的代理模块。
+        ---
+        ARGUS 代理模块。
+        Agent Loop / State
+    </description>
+
+
+</project>
