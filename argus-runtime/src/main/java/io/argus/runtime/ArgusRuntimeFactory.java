@@ -20,12 +20,20 @@ import io.argus.ingestion.fetch.DefaultFetchExecutorRegistry;
 import io.argus.ingestion.fetch.FetchExecutor;
 import io.argus.ingestion.fetch.FetchExecutorRegistry;
 import io.argus.ingestion.fetch.RegistryBackedFetchExecutor;
+import io.argus.ingestion.fetch.replay.FetchRecordStore;
+import io.argus.ingestion.fetch.replay.FetchReplayMode;
+import io.argus.ingestion.fetch.replay.InMemoryFetchRecordStore;
+import io.argus.ingestion.fetch.replay.RecordingFetchExecutor;
+import io.argus.ingestion.fetch.replay.ReplayableFetchExecutor;
 import io.argus.ingestion.fetch.protocol.ftp.FtpFetchExecutor;
 import io.argus.ingestion.fetch.protocol.http.HttpFetchExecutor;
 import io.argus.ingestion.orchestration.DefaultIngestionOrchestrator;
 import io.argus.ingestion.orchestration.IngestionOrchestrator;
 import io.argus.ingestion.parse.Parser;
 import io.argus.ingestion.parse.SimpleDocumentParser;
+import io.argus.ingestion.policy.FetchPolicy;
+import io.argus.ingestion.source.DefaultIngestionSource;
+import io.argus.ingestion.source.IngestionSource;
 
 /**
  * Creates default runtime infrastructure for ARGUS.
@@ -65,11 +73,19 @@ public final class ArgusRuntimeFactory {
         FetchAuditPublisher fetchAuditPublisher = createDefaultFetchAuditPublisher(auditLog);
         IngestionAuditPublisher ingestionAuditPublisher = createDefaultIngestionAuditPublisher(auditLog);
         FetchExecutorRegistry fetchExecutorRegistry = createDefaultFetchExecutorRegistry(fetchAuditPublisher);
-        FetchExecutor fetchExecutor = createDefaultFetchExecutor(fetchExecutorRegistry);
+        FetchRecordStore fetchRecordStore = createDefaultFetchRecordStore();
+        FetchReplayMode fetchReplayMode = createDefaultFetchReplayMode();
+        FetchExecutor fetchExecutor = createDefaultFetchExecutor(
+                fetchExecutorRegistry,
+                fetchRecordStore,
+                fetchReplayMode,
+                fetchAuditPublisher
+        );
         Parser parser = createDefaultParser();
         ChunkStrategy chunkStrategy = createDefaultChunkStrategy();
         EmbeddingModel embeddingModel = createDefaultEmbeddingModel();
         VectorStore vectorStore = createDefaultVectorStore();
+        FetchPolicy fetchPolicy = createDefaultFetchPolicy();
         IngestionOrchestrator ingestionOrchestrator = createDefaultIngestionOrchestrator(
                 fetchExecutor,
                 parser,
@@ -77,6 +93,11 @@ public final class ArgusRuntimeFactory {
                 embeddingModel,
                 vectorStore,
                 ingestionAuditPublisher
+        );
+        IngestionSource ingestionSource = createDefaultIngestionSource(
+                ingestionOrchestrator,
+                fetchPolicy,
+                fetchReplayMode
         );
         AgentRunner agentRunner = createDefaultAgentRunner(memory, auditLog);
 
@@ -86,8 +107,11 @@ public final class ArgusRuntimeFactory {
                 fetchAuditPublisher,
                 ingestionAuditPublisher,
                 fetchExecutorRegistry,
+                fetchRecordStore,
+                fetchPolicy,
                 fetchExecutor,
                 ingestionOrchestrator,
+                ingestionSource,
                 agentRunner
         ).start();
     }
@@ -119,7 +143,35 @@ public final class ArgusRuntimeFactory {
     }
 
     public static FetchExecutor createDefaultFetchExecutor(FetchExecutorRegistry registry) {
-        return new RegistryBackedFetchExecutor(registry);
+        return createDefaultFetchExecutor(
+                registry,
+                createDefaultFetchRecordStore(),
+                createDefaultFetchReplayMode(),
+                null
+        );
+    }
+
+    public static FetchRecordStore createDefaultFetchRecordStore() {
+        return new InMemoryFetchRecordStore();
+    }
+
+    public static FetchReplayMode createDefaultFetchReplayMode() {
+        return FetchReplayMode.LIVE;
+    }
+
+    public static FetchPolicy createDefaultFetchPolicy() {
+        return FetchPolicy.unrestricted();
+    }
+
+    public static FetchExecutor createDefaultFetchExecutor(
+            FetchExecutorRegistry registry,
+            FetchRecordStore store,
+            FetchReplayMode replayMode,
+            FetchAuditPublisher publisher
+    ) {
+        FetchExecutor liveExecutor = new RegistryBackedFetchExecutor(registry);
+        FetchExecutor recordingExecutor = new RecordingFetchExecutor(liveExecutor, store, publisher);
+        return new ReplayableFetchExecutor(recordingExecutor, store, replayMode, publisher);
     }
 
     public static Parser createDefaultParser() {
@@ -162,14 +214,25 @@ public final class ArgusRuntimeFactory {
         return new DefaultAgentRunner(memory, auditLog);
     }
 
+    public static IngestionSource createDefaultIngestionSource(
+            IngestionOrchestrator ingestionOrchestrator,
+            FetchPolicy fetchPolicy,
+            FetchReplayMode fetchReplayMode
+    ) {
+        return new DefaultIngestionSource(ingestionOrchestrator, fetchPolicy, fetchReplayMode);
+    }
+
     public static ArgusRuntime createRuntime(
             Memory memory,
             AuditLog auditLog,
             FetchAuditPublisher fetchAuditPublisher,
             IngestionAuditPublisher ingestionAuditPublisher,
             FetchExecutorRegistry fetchExecutorRegistry,
+            FetchRecordStore fetchRecordStore,
+            FetchPolicy fetchPolicy,
             FetchExecutor fetchExecutor,
             IngestionOrchestrator ingestionOrchestrator,
+            IngestionSource ingestionSource,
             AgentRunner agentRunner
     ) {
         return new ArgusRuntime(
@@ -178,8 +241,11 @@ public final class ArgusRuntimeFactory {
                 fetchAuditPublisher,
                 ingestionAuditPublisher,
                 fetchExecutorRegistry,
+                fetchRecordStore,
+                fetchPolicy,
                 fetchExecutor,
                 ingestionOrchestrator,
+                ingestionSource,
                 agentRunner
         );
     }

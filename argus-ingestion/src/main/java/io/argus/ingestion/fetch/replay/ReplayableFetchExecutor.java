@@ -1,10 +1,15 @@
 package io.argus.ingestion.fetch.replay;
 
+import io.argus.ingestion.audit.fetch.FetchAuditEvent;
+import io.argus.ingestion.audit.fetch.FetchAuditPublisher;
+import io.argus.ingestion.audit.fetch.FetchAuditType;
 import io.argus.ingestion.fetch.FetchExecutor;
 import io.argus.ingestion.fetch.FetchProtocol;
 import io.argus.ingestion.fetch.FetchRequest;
 import io.argus.ingestion.fetch.FetchResult;
 
+import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -17,15 +22,26 @@ public class ReplayableFetchExecutor implements FetchExecutor {
     private final FetchExecutor delegate;
     private final FetchRecordStore store;
     private final FetchReplayMode mode;
+    private final FetchAuditPublisher publisher;
 
     public ReplayableFetchExecutor(
             FetchExecutor delegate,
             FetchRecordStore store,
             FetchReplayMode mode
     ) {
-        this.delegate = delegate;
-        this.store = store;
-        this.mode = mode;
+        this(delegate, store, mode, null);
+    }
+
+    public ReplayableFetchExecutor(
+            FetchExecutor delegate,
+            FetchRecordStore store,
+            FetchReplayMode mode,
+            FetchAuditPublisher publisher
+    ) {
+        this.delegate = Objects.requireNonNull(delegate, "delegate");
+        this.store = Objects.requireNonNull(store, "store");
+        this.mode = Objects.requireNonNull(mode, "mode");
+        this.publisher = publisher;
     }
 
     @Override
@@ -80,7 +96,25 @@ public class ReplayableFetchExecutor implements FetchExecutor {
             );
         }
 
+        publishReplayed(request);
         return record.result();
+    }
+
+    private void publishReplayed(FetchRequest request) {
+
+        if (publisher == null) {
+            return;
+        }
+
+        publisher.publish(
+                new FetchAuditEvent(
+                        FetchAuditType.FETCH_REPLAYED,
+                        request.protocol(),
+                        request.resource().toString(),
+                        Instant.now(),
+                        "mode=" + mode.name()
+                )
+        );
     }
 
 }   // Class end.

@@ -106,5 +106,8 @@ import io.argus.core.observation.Observation;
  * @author TK.ENDO
  * @since 2026-02-10 周二 14:57
  */
-public class IngestionSource {
+public interface IngestionSource {
+
+    IngestionResult ingest(IngestionRequest request, IngestionMode mode);
+
 } // Class end.

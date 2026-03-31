@@ -1,5 +1,8 @@
 package io.argus.ingestion.fetch.replay;
 
+import io.argus.ingestion.audit.fetch.FetchAuditEvent;
+import io.argus.ingestion.audit.fetch.FetchAuditPublisher;
+import io.argus.ingestion.audit.fetch.FetchAuditType;
 import io.argus.ingestion.fetch.FetchExecutor;
 import io.argus.ingestion.fetch.FetchProtocol;
 import io.argus.ingestion.fetch.FetchRequest;
@@ -23,12 +26,22 @@ public class RecordingFetchExecutor implements FetchExecutor {
 
     private final FetchExecutor delegate;
     private final FetchRecordStore recordStore;
+    private final FetchAuditPublisher publisher;
 
     public RecordingFetchExecutor(
             FetchExecutor delegate,
             FetchRecordStore recordStore) {
+        this(delegate, recordStore, null);
+    }
+
+    public RecordingFetchExecutor(
+            FetchExecutor delegate,
+            FetchRecordStore recordStore,
+            FetchAuditPublisher publisher
+    ) {
         this.delegate = Objects.requireNonNull(delegate);
         this.recordStore = Objects.requireNonNull(recordStore);
+        this.publisher = publisher;
     }
 
     @Override
@@ -59,6 +72,7 @@ public class RecordingFetchExecutor implements FetchExecutor {
                             Instant.ofEpochMilli(end)
                     )
             );
+            publishRecorded(request, "success=true");
 
             return result;
 
@@ -74,9 +88,27 @@ public class RecordingFetchExecutor implements FetchExecutor {
                             Instant.ofEpochMilli(end)
                     )
             );
+            publishRecorded(request, "success=false");
 
             throw ex;
         }
+    }
+
+    private void publishRecorded(FetchRequest request, String message) {
+
+        if (publisher == null) {
+            return;
+        }
+
+        publisher.publish(
+                new FetchAuditEvent(
+                        FetchAuditType.FETCH_RECORDED,
+                        request.protocol(),
+                        request.resource().toString(),
+                        Instant.now(),
+                        message
+                )
+        );
     }
 
 }   // Class end.

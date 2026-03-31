@@ -11,8 +11,12 @@ import io.argus.ingestion.domain.embedding.EmbeddingModel;
 import io.argus.ingestion.domain.vector.VectorStore;
 import io.argus.ingestion.fetch.FetchExecutor;
 import io.argus.ingestion.fetch.FetchExecutorRegistry;
+import io.argus.ingestion.fetch.replay.FetchRecordStore;
+import io.argus.ingestion.fetch.replay.FetchReplayMode;
 import io.argus.ingestion.orchestration.IngestionOrchestrator;
 import io.argus.ingestion.parse.Parser;
+import io.argus.ingestion.policy.FetchPolicy;
+import io.argus.ingestion.source.IngestionSource;
 import junit.framework.TestCase;
 
 /**
@@ -30,7 +34,15 @@ public class ArgusRuntimeTest extends TestCase {
                 ArgusRuntimeFactory.createDefaultIngestionAuditPublisher(auditLog);
         FetchExecutorRegistry fetchExecutorRegistry =
                 ArgusRuntimeFactory.createDefaultFetchExecutorRegistry(fetchAuditPublisher);
-        FetchExecutor fetchExecutor = ArgusRuntimeFactory.createDefaultFetchExecutor(fetchExecutorRegistry);
+        FetchRecordStore fetchRecordStore = ArgusRuntimeFactory.createDefaultFetchRecordStore();
+        FetchReplayMode fetchReplayMode = ArgusRuntimeFactory.createDefaultFetchReplayMode();
+        FetchPolicy fetchPolicy = ArgusRuntimeFactory.createDefaultFetchPolicy();
+        FetchExecutor fetchExecutor = ArgusRuntimeFactory.createDefaultFetchExecutor(
+                fetchExecutorRegistry,
+                fetchRecordStore,
+                fetchReplayMode,
+                fetchAuditPublisher
+        );
         Parser parser = ArgusRuntimeFactory.createDefaultParser();
         ChunkStrategy chunkStrategy = ArgusRuntimeFactory.createDefaultChunkStrategy();
         EmbeddingModel embeddingModel = ArgusRuntimeFactory.createDefaultEmbeddingModel();
@@ -43,6 +55,11 @@ public class ArgusRuntimeTest extends TestCase {
                 vectorStore,
                 ingestionAuditPublisher
         );
+        IngestionSource ingestionSource = ArgusRuntimeFactory.createDefaultIngestionSource(
+                ingestionOrchestrator,
+                fetchPolicy,
+                fetchReplayMode
+        );
         AgentRunner agentRunner = ArgusRuntimeFactory.createDefaultAgentRunner(memory, auditLog);
 
         ArgusRuntime runtime = ArgusRuntimeFactory.createRuntime(
@@ -51,8 +68,11 @@ public class ArgusRuntimeTest extends TestCase {
                 fetchAuditPublisher,
                 ingestionAuditPublisher,
                 fetchExecutorRegistry,
+                fetchRecordStore,
+                fetchPolicy,
                 fetchExecutor,
                 ingestionOrchestrator,
+                ingestionSource,
                 agentRunner
         );
 

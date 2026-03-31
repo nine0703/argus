@@ -14,8 +14,11 @@ import io.argus.ingestion.domain.embedding.HashEmbeddingModel;
 import io.argus.ingestion.domain.vector.VectorStore;
 import io.argus.ingestion.fetch.FetchExecutor;
 import io.argus.ingestion.fetch.FetchExecutorRegistry;
+import io.argus.ingestion.fetch.replay.FetchRecordStore;
 import io.argus.ingestion.orchestration.IngestionOrchestrator;
 import io.argus.ingestion.parse.Parser;
+import io.argus.ingestion.policy.FetchPolicy;
+import io.argus.ingestion.source.IngestionSource;
 import io.argus.runtime.ArgusRuntime;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -24,7 +27,7 @@ import junit.framework.TestCase;
 
 /**
  * @author TK.ENDO
- * @since 2026-03-31 周二 17:09
+ * @since 2026-03-31 鍛ㄤ簩 17:09
  */
 public class ArgusAutoConfigurationTest extends TestCase {
 
@@ -42,16 +45,22 @@ public class ArgusAutoConfigurationTest extends TestCase {
             assertNotNull(context.getBean(FetchAuditPublisher.class));
             assertNotNull(context.getBean(IngestionAuditPublisher.class));
             assertNotNull(context.getBean(FetchExecutorRegistry.class));
+            assertNotNull(context.getBean(FetchRecordStore.class));
+            assertNotNull(context.getBean(FetchPolicy.class));
             assertNotNull(context.getBean(FetchExecutor.class));
             assertNotNull(context.getBean(Parser.class));
             assertNotNull(context.getBean(ChunkStrategy.class));
             assertNotNull(context.getBean(EmbeddingModel.class));
             assertNotNull(context.getBean(VectorStore.class));
             assertNotNull(context.getBean(IngestionOrchestrator.class));
+            assertNotNull(context.getBean(IngestionSource.class));
             assertNotNull(context.getBean(AgentRunner.class));
+            assertNotNull(runtime.fetchRecordStore());
+            assertNotNull(runtime.fetchPolicy());
             assertNotNull(runtime.ingestionAuditPublisher());
             assertNotNull(runtime.fetchExecutor());
             assertNotNull(runtime.ingestionOrchestrator());
+            assertNotNull(runtime.ingestionSource());
             assertNotNull(runtime.agentRunner());
             assertEquals(LifecyclePhase.RUNNING, runtime.phase());
         });
@@ -82,7 +91,12 @@ public class ArgusAutoConfigurationTest extends TestCase {
                 .withPropertyValues(
                         "argus.ingestion.chunk-size=8",
                         "argus.ingestion.embedding-dimension=6",
-                        "argus.ingestion.vector-namespace=docs"
+                        "argus.ingestion.vector-namespace=docs",
+                        "argus.fetch.replay-mode=HYBRID",
+                        "argus.fetch.policy.allowed-protocols[0]=http",
+                        "argus.fetch.policy.rate-limit=2s",
+                        "argus.fetch.policy.obey-robots-txt=true",
+                        "argus.fetch.policy.user-agent=argus-docs"
                 )
                 .run(context -> {
                     FixedSizeChunkStrategy chunkStrategy =
@@ -90,10 +104,15 @@ public class ArgusAutoConfigurationTest extends TestCase {
                     HashEmbeddingModel embeddingModel =
                             (HashEmbeddingModel) context.getBean(EmbeddingModel.class);
                     VectorStore vectorStore = context.getBean(VectorStore.class);
+                    FetchPolicy fetchPolicy = context.getBean(FetchPolicy.class);
 
                     assertEquals(8, chunkStrategy.chunkSize());
                     assertEquals(6, embeddingModel.dimension());
                     assertEquals("docs", vectorStore.namespace());
+                    assertTrue(fetchPolicy.allowedProtocols().contains("http"));
+                    assertEquals(2000L, fetchPolicy.rateLimitPolicy().minInterval().toMillis());
+                    assertTrue(fetchPolicy.robotPolicy().obeyRobotsTxt());
+                    assertEquals("argus-docs", fetchPolicy.robotPolicy().userAgent());
                 });
     }
 
@@ -103,7 +122,6 @@ public class ArgusAutoConfigurationTest extends TestCase {
                 .withPropertyValues("argus.ingestion.chunk-size=0")
                 .run(context -> {
                     assertNotNull(context.getStartupFailure());
-                    
                 });
     }
 

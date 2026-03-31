@@ -13,8 +13,13 @@ import io.argus.ingestion.domain.vector.InMemoryVectorStore;
 import io.argus.ingestion.domain.vector.VectorStore;
 import io.argus.ingestion.fetch.FetchExecutor;
 import io.argus.ingestion.fetch.FetchExecutorRegistry;
+import io.argus.ingestion.fetch.replay.FetchRecordStore;
 import io.argus.ingestion.orchestration.IngestionOrchestrator;
 import io.argus.ingestion.parse.Parser;
+import io.argus.ingestion.policy.FetchPolicy;
+import io.argus.ingestion.policy.RateLimitPolicy;
+import io.argus.ingestion.policy.RobotPolicy;
+import io.argus.ingestion.source.IngestionSource;
 import io.argus.runtime.ArgusRuntime;
 import io.argus.runtime.ArgusRuntimeFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -40,7 +45,7 @@ import org.springframework.context.annotation.Bean;
  * defaults.
  *
  * @author TK.ENDO
- * @since 2026-03-31 周二 17:08
+ * @since 2026-03-31 鍛ㄤ簩 17:08
  */
 @AutoConfiguration
 @ConditionalOnClass(ArgusRuntime.class)
@@ -80,8 +85,35 @@ public class ArgusAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public FetchExecutor argusFetchExecutor(FetchExecutorRegistry registry) {
-        return ArgusRuntimeFactory.createDefaultFetchExecutor(registry);
+    public FetchRecordStore argusFetchRecordStore() {
+        return ArgusRuntimeFactory.createDefaultFetchRecordStore();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public FetchPolicy argusFetchPolicy(ArgusProperties properties) {
+        ArgusProperties.Policy policy = properties.getFetch().getPolicy();
+        return new FetchPolicy(
+                policy.getAllowedProtocols(),
+                new RateLimitPolicy(policy.getRateLimit()),
+                new RobotPolicy(policy.isObeyRobotsTxt(), policy.getUserAgent())
+        );
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public FetchExecutor argusFetchExecutor(
+            FetchExecutorRegistry registry,
+            FetchRecordStore recordStore,
+            FetchAuditPublisher publisher,
+            ArgusProperties properties
+    ) {
+        return ArgusRuntimeFactory.createDefaultFetchExecutor(
+                registry,
+                recordStore,
+                properties.getFetch().getReplayMode(),
+                publisher
+        );
     }
 
     @Bean
@@ -130,6 +162,20 @@ public class ArgusAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    public IngestionSource argusIngestionSource(
+            IngestionOrchestrator ingestionOrchestrator,
+            FetchPolicy fetchPolicy,
+            ArgusProperties properties
+    ) {
+        return ArgusRuntimeFactory.createDefaultIngestionSource(
+                ingestionOrchestrator,
+                fetchPolicy,
+                properties.getFetch().getReplayMode()
+        );
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
     public AgentRunner argusAgentRunner(Memory memory, AuditLog auditLog) {
         return ArgusRuntimeFactory.createDefaultAgentRunner(memory, auditLog);
     }
@@ -142,8 +188,11 @@ public class ArgusAutoConfiguration {
             FetchAuditPublisher fetchAuditPublisher,
             IngestionAuditPublisher ingestionAuditPublisher,
             FetchExecutorRegistry fetchExecutorRegistry,
+            FetchRecordStore fetchRecordStore,
+            FetchPolicy fetchPolicy,
             FetchExecutor fetchExecutor,
             IngestionOrchestrator ingestionOrchestrator,
+            IngestionSource ingestionSource,
             AgentRunner agentRunner
     ) {
         return ArgusRuntimeFactory.createRuntime(
@@ -152,8 +201,11 @@ public class ArgusAutoConfiguration {
                 fetchAuditPublisher,
                 ingestionAuditPublisher,
                 fetchExecutorRegistry,
+                fetchRecordStore,
+                fetchPolicy,
                 fetchExecutor,
                 ingestionOrchestrator,
+                ingestionSource,
                 agentRunner
         );
     }

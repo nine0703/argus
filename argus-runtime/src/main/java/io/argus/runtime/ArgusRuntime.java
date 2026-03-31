@@ -10,7 +10,10 @@ import io.argus.ingestion.audit.IngestionAuditPublisher;
 import io.argus.ingestion.audit.fetch.FetchAuditPublisher;
 import io.argus.ingestion.fetch.FetchExecutor;
 import io.argus.ingestion.fetch.FetchExecutorRegistry;
+import io.argus.ingestion.fetch.replay.FetchRecordStore;
 import io.argus.ingestion.orchestration.IngestionOrchestrator;
+import io.argus.ingestion.policy.FetchPolicy;
+import io.argus.ingestion.source.IngestionSource;
 
 import java.util.Objects;
 
@@ -49,8 +52,11 @@ public final class ArgusRuntime implements Lifecycle, Stoppable {
     private final FetchAuditPublisher fetchAuditPublisher;
     private final IngestionAuditPublisher ingestionAuditPublisher;
     private final FetchExecutorRegistry fetchExecutorRegistry;
+    private final FetchRecordStore fetchRecordStore;
+    private final FetchPolicy fetchPolicy;
     private final FetchExecutor fetchExecutor;
     private final IngestionOrchestrator ingestionOrchestrator;
+    private final IngestionSource ingestionSource;
     private final AgentRunner agentRunner;
     private volatile LifecyclePhase phase;
 
@@ -60,8 +66,11 @@ public final class ArgusRuntime implements Lifecycle, Stoppable {
             FetchAuditPublisher fetchAuditPublisher,
             IngestionAuditPublisher ingestionAuditPublisher,
             FetchExecutorRegistry fetchExecutorRegistry,
+            FetchRecordStore fetchRecordStore,
+            FetchPolicy fetchPolicy,
             FetchExecutor fetchExecutor,
             IngestionOrchestrator ingestionOrchestrator,
+            IngestionSource ingestionSource,
             AgentRunner agentRunner
     ) {
         this.memory = Objects.requireNonNull(memory, "memory");
@@ -69,8 +78,11 @@ public final class ArgusRuntime implements Lifecycle, Stoppable {
         this.fetchAuditPublisher = Objects.requireNonNull(fetchAuditPublisher, "fetchAuditPublisher");
         this.ingestionAuditPublisher = Objects.requireNonNull(ingestionAuditPublisher, "ingestionAuditPublisher");
         this.fetchExecutorRegistry = Objects.requireNonNull(fetchExecutorRegistry, "fetchExecutorRegistry");
+        this.fetchRecordStore = Objects.requireNonNull(fetchRecordStore, "fetchRecordStore");
+        this.fetchPolicy = Objects.requireNonNull(fetchPolicy, "fetchPolicy");
         this.fetchExecutor = Objects.requireNonNull(fetchExecutor, "fetchExecutor");
         this.ingestionOrchestrator = Objects.requireNonNull(ingestionOrchestrator, "ingestionOrchestrator");
+        this.ingestionSource = Objects.requireNonNull(ingestionSource, "ingestionSource");
         this.agentRunner = Objects.requireNonNull(agentRunner, "agentRunner");
         this.phase = LifecyclePhase.CREATED;
     }
@@ -95,12 +107,24 @@ public final class ArgusRuntime implements Lifecycle, Stoppable {
         return fetchExecutorRegistry;
     }
 
+    public FetchRecordStore fetchRecordStore() {
+        return fetchRecordStore;
+    }
+
+    public FetchPolicy fetchPolicy() {
+        return fetchPolicy;
+    }
+
     public FetchExecutor fetchExecutor() {
         return fetchExecutor;
     }
 
     public IngestionOrchestrator ingestionOrchestrator() {
         return ingestionOrchestrator;
+    }
+
+    public IngestionSource ingestionSource() {
+        return ingestionSource;
     }
 
     public AgentRunner agentRunner() {

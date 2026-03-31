@@ -1,5 +1,13 @@
 package io.argus.spring.boot.autoconfigure;
 
+import io.argus.ingestion.fetch.replay.FetchReplayMode;
+
+import java.time.Duration;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -15,7 +23,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * during container bootstrap rather than during the first runtime request.
  *
  * @author TK.ENDO
- * @since 2026-03-31 周二 17:08
+ * @since 2026-03-31 鍛ㄤ簩 17:08
  */
 @ConfigurationProperties(prefix = "argus")
 public class ArgusProperties {
@@ -28,6 +36,10 @@ public class ArgusProperties {
      * Ingestion-specific defaults exposed by the starter.
      */
     private final Ingestion ingestion = new Ingestion();
+    /**
+     * Fetch-specific defaults exposed by the starter.
+     */
+    private final Fetch fetch = new Fetch();
 
     public boolean isEnabled() {
         return enabled;
@@ -39,6 +51,10 @@ public class ArgusProperties {
 
     public Ingestion getIngestion() {
         return ingestion;
+    }
+
+    public Fetch getFetch() {
+        return fetch;
     }
 
     /**
@@ -92,6 +108,80 @@ public class ArgusProperties {
             this.vectorNamespace = vectorNamespace.trim();
         }
 
+    }
+
+    /**
+     * Property group for fetch execution and replay defaults.
+     */
+    public static class Fetch {
+
+        private FetchReplayMode replayMode = FetchReplayMode.LIVE;
+        private final Policy policy = new Policy();
+
+        public FetchReplayMode getReplayMode() {
+            return replayMode;
+        }
+
+        public void setReplayMode(FetchReplayMode replayMode) {
+            this.replayMode = Objects.requireNonNull(replayMode, "replayMode");
+        }
+
+        public Policy getPolicy() {
+            return policy;
+        }
+    }
+
+    /**
+     * Property group for the default fetch policy declaration.
+     */
+    public static class Policy {
+
+        private Set<String> allowedProtocols = Collections.emptySet();
+        private Duration rateLimit = Duration.ZERO;
+        private boolean obeyRobotsTxt;
+        private String userAgent = "argus";
+
+        public Set<String> getAllowedProtocols() {
+            return allowedProtocols;
+        }
+
+        public void setAllowedProtocols(Set<String> allowedProtocols) {
+            if (allowedProtocols == null || allowedProtocols.isEmpty()) {
+                this.allowedProtocols = Collections.emptySet();
+                return;
+            }
+            this.allowedProtocols = Collections.unmodifiableSet(new LinkedHashSet<>(allowedProtocols));
+        }
+
+        public Duration getRateLimit() {
+            return rateLimit;
+        }
+
+        public void setRateLimit(Duration rateLimit) {
+            this.rateLimit = Objects.requireNonNull(rateLimit, "rateLimit");
+            if (this.rateLimit.isNegative()) {
+                throw new IllegalArgumentException("argus.fetch.policy.rate-limit must not be negative");
+            }
+        }
+
+        public boolean isObeyRobotsTxt() {
+            return obeyRobotsTxt;
+        }
+
+        public void setObeyRobotsTxt(boolean obeyRobotsTxt) {
+            this.obeyRobotsTxt = obeyRobotsTxt;
+        }
+
+        public String getUserAgent() {
+            return userAgent;
+        }
+
+        public void setUserAgent(String userAgent) {
+            if (userAgent == null || userAgent.trim().isEmpty()) {
+                throw new IllegalArgumentException("argus.fetch.policy.user-agent must not be blank");
+            }
+            this.userAgent = userAgent.trim();
+        }
     }
 
 } // Class end.
