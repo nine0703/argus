@@ -2,36 +2,32 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>io.argus</groupId>
         <artifactId>argus</artifactId>
         <version>1.0.0</version>
     </parent>
 
-    <artifactId>argus-runtime</artifactId>
-    <name>argus-runtime</name>
+    <artifactId>argus-spring-boot-starter</artifactId>
+    <name>argus-spring-boot-starter</name>
     <description>
-        ARGUS Runtime
-        ARGUS 的运行时模块。
+        ARGUS Spring Boot Starter
+        ARGUS 的 Spring Boot Starter 入口模块。
         ---
-        ARGUS 运行时模块。
+        业务项目只需引入此模块即可接入 ARGUS 默认自动装配能力。
     </description>
 
     <dependencies>
         <dependency>
             <groupId>io.argus</groupId>
-            <artifactId>argus-core</artifactId>
+            <artifactId>argus-spring-boot-autoconfigure</artifactId>
             <version>1.0.0</version>
         </dependency>
         <dependency>
-            <groupId>io.argus</groupId>
-            <artifactId>argus-ingestion</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>io.argus</groupId>
-            <artifactId>argus-agent</artifactId>
-            <version>1.0.0</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <version>${spring.boot.version}</version>
         </dependency>
     </dependencies>
 

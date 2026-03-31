@@ -29,6 +29,8 @@
         <module>argus-ingestion</module>
         <module>argus-agent</module>
         <module>argus-runtime</module>
+        <module>argus-spring-boot-autoconfigure</module>
+        <module>argus-spring-boot-starter</module>
     </modules>
 
     <dependencies>
