@@ -9,7 +9,6 @@
     </parent>
 
     <artifactId>argus-agent</artifactId>
-    <version>1.0.0</version>
     <name>argus-agent</name>
     <description>
         ARGUS Agent
@@ -18,6 +17,5 @@
         ARGUS 代理模块。
         Agent Loop / State
     </description>
-
 
 </project>
