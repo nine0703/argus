@@ -1,5 +1,9 @@
 package io.argus.ingestion.source;
 
+import io.argus.ingestion.fetch.FetchRequest;
+import io.argus.ingestion.orchestration.IngestionOptions;
+import io.argus.ingestion.policy.FetchPolicy;
+
 import java.io.Serializable;
 
 /**
@@ -99,4 +103,12 @@ import java.io.Serializable;
  * @since 2026-02-10 周二 14:57
  */
 public interface IngestionRequest extends Serializable {
+
+    String id();
+
+    FetchRequest fetchRequest();
+
+    IngestionOptions options();
+
+    FetchPolicy fetchPolicy();
 } // Class end.

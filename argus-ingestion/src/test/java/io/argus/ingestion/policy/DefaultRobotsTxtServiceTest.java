@@ -74,6 +74,32 @@ public class DefaultRobotsTxtServiceTest extends TestCase {
         assertFalse(allowed);
     }
 
+    public void testShouldMatchUserAgentByPrefix() {
+
+        StubFetchExecutor executor = new StubFetchExecutor();
+        executor.register(
+                "http://example.com/robots.txt",
+                new HttpFetchResult(
+                        200,
+                        ("User-agent: argus-bot\nDisallow: /private").getBytes(),
+                        Collections.emptyMap()
+                )
+        );
+        DefaultRobotsTxtService service = new DefaultRobotsTxtService(executor, Duration.ofMinutes(5));
+
+        boolean allowed = service.isAllowed(
+                new HttpFetchRequest(
+                        URI.create("http://example.com/private/doc"),
+                        HttpMethod.GET,
+                        Collections.emptyMap(),
+                        null
+                ),
+                RobotPolicy.strict("argus-bot/1.0")
+        );
+
+        assertFalse(allowed);
+    }
+
     public void testShouldTreatNotFoundRobotsAsAllowAll() {
 
         StubFetchExecutor executor = new StubFetchExecutor();

@@ -136,6 +136,25 @@ public class DefaultIngestionSourceTest extends TestCase {
         }
     }
 
+    public void testShouldAcceptCustomIngestionRequestImplementation() {
+
+        StubIngestionOrchestrator orchestrator = new StubIngestionOrchestrator();
+        DefaultIngestionSource source = new DefaultIngestionSource(
+                orchestrator,
+                FetchPolicy.unrestricted(),
+                FetchReplayMode.HYBRID
+        );
+
+        IngestionResult result = source.ingest(
+                new CustomIngestionRequest(request(FetchPolicy.unrestricted())),
+                IngestionMode.LIVE
+        );
+
+        assertTrue(result.success());
+        assertEquals("LIVE", result.metadata().get("mode"));
+        assertEquals(1, orchestrator.invocationCount);
+    }
+
     private DefaultIngestionRequest request(FetchPolicy policy) {
         return new DefaultIngestionRequest(
                 "req-1",
@@ -171,6 +190,35 @@ public class DefaultIngestionSourceTest extends TestCase {
         @Override
         public boolean isAllowed(FetchRequest request, RobotPolicy policy) {
             return false;
+        }
+    }
+
+    private static final class CustomIngestionRequest implements IngestionRequest {
+
+        private final DefaultIngestionRequest delegate;
+
+        private CustomIngestionRequest(DefaultIngestionRequest delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public String id() {
+            return delegate.id();
+        }
+
+        @Override
+        public FetchRequest fetchRequest() {
+            return delegate.fetchRequest();
+        }
+
+        @Override
+        public IngestionOptions options() {
+            return delegate.options();
+        }
+
+        @Override
+        public FetchPolicy fetchPolicy() {
+            return delegate.fetchPolicy();
         }
     }
 

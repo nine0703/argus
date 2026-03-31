@@ -12,8 +12,8 @@
         agent-based systems.
         ---
         ARGUS
-        面向网络知识获取与AI代理的全视运行时。
-        ARGUS 是一个生产级的 Java 运行时，专为基于代理的系统中可审计、可控制和可复现的网络数据获取而设计。
+        面向网络知识获取与 AI 代理的全视运行时。
+        ARGUS 是一个生产级 Java 运行时，专为代理式系统中可审计、可控制、可复现的 Web 数据摄取而设计。
     </description>
 
     <properties>

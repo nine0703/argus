@@ -232,18 +232,39 @@ public class DefaultRobotsTxtService implements RobotsTxtService {
 
         private List<RuleGroup> selectGroups(String userAgent) {
 
-            List<RuleGroup> exact = new ArrayList<>();
-            List<RuleGroup> wildcard = new ArrayList<>();
+            List<RuleGroup> matches = new ArrayList<>();
+            int bestSpecificity = -1;
 
             for (RuleGroup group : groups) {
-                if (group.userAgents.contains(userAgent)) {
-                    exact.add(group);
-                } else if (group.userAgents.contains("*")) {
-                    wildcard.add(group);
+                int specificity = matchSpecificity(group, userAgent);
+                if (specificity < 0) {
+                    continue;
+                }
+                if (specificity > bestSpecificity) {
+                    matches.clear();
+                    bestSpecificity = specificity;
+                }
+                if (specificity == bestSpecificity) {
+                    matches.add(group);
                 }
             }
 
-            return exact.isEmpty() ? wildcard : exact;
+            return matches;
+        }
+
+        private int matchSpecificity(RuleGroup group, String userAgent) {
+
+            int best = -1;
+            for (String declaredUserAgent : group.userAgents) {
+                if ("*".equals(declaredUserAgent)) {
+                    best = Math.max(best, 0);
+                    continue;
+                }
+                if (userAgent.startsWith(declaredUserAgent)) {
+                    best = Math.max(best, declaredUserAgent.length());
+                }
+            }
+            return best;
         }
 
         private static String stripComment(String line) {

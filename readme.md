@@ -2,15 +2,15 @@
 
 > The All-Seeing Runtime for Web Knowledge Ingestion and AI Agents
 
-ARGUS 是一个生产级的 Java 运行时，专为基于代理的系统中**可审计、可控制、可复现**的网络数据获取而设计。
+ARGUS 是一个生产级 Java 运行时，专为代理式系统中的 **可审计、可控制、可复现** Web 数据摄取而设计。
 
 ## 模块结构
 
 | 模块 | 说明 |
 |------|------|
-| `argus-core` | 核心基础能力（Action、Agent、Memory、Observation、Lifecycle） |
-| `argus-ingestion` | 网络知识获取（Fetch、Parse、Policy、Replay） |
-| `argus-agent` | AI 代理最小执行层与 loop 驱动模型 |
+| `argus-core` | 核心基础能力：Action、Agent、Memory、Observation、Lifecycle |
+| `argus-ingestion` | 网络知识摄取：Fetch、Parse、Policy、Replay |
+| `argus-agent` | AI 代理的最小执行层与 loop 驱动模型 |
 | `argus-runtime` | 运行时核心实现与默认装配能力 |
 | `argus-spring-boot-autoconfigure` | Spring Boot 自动装配模块 |
 | `argus-spring-boot-starter` | Spring Boot Starter 聚合入口 |
@@ -22,7 +22,7 @@ ARGUS 的 Spring Boot 接入采用分层设计：
 - `argus-runtime` 提供不绑定 Spring 的运行时核心能力
 - `argus-agent` 提供 loop-driven agent 的默认执行层
 - `argus-spring-boot-autoconfigure` 提供自动装配
-- `argus-spring-boot-starter` 作为业务方导入坐标
+- `argus-spring-boot-starter` 作为业务侧导入坐标
 
 目标使用方式如下：
 
@@ -56,7 +56,7 @@ ARGUS 的 Spring Boot 接入采用分层设计：
 - `IngestionSource`
 - `AgentRunner`
 
-`ArgusRuntime` 会聚合上述关键能力，因此业务侧既可以按 Bean 单点注入，也可以直接以运行时容器为统一入口。
+`ArgusRuntime` 会聚合上述关键能力，因此业务侧既可以按 Bean 单点注入，也可以直接以运行时容器作为统一入口。
 
 所有 Bean 都采用 `@ConditionalOnMissingBean`，业务侧可以按单个能力点覆盖，而不需要整体替换 starter。
 

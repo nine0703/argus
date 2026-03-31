@@ -62,7 +62,7 @@ public final class DefaultIngestionSource implements IngestionSource {
     @Override
     public IngestionResult ingest(IngestionRequest request, IngestionMode mode) {
 
-        DefaultIngestionRequest resolvedRequest = asDefaultRequest(request);
+        IngestionRequest resolvedRequest = Objects.requireNonNull(request, "request");
         IngestionMode resolvedMode = Objects.requireNonNull(mode, "mode");
         FetchPolicy policy = resolvedRequest.fetchPolicy() == null
                 ? defaultFetchPolicy
@@ -88,17 +88,6 @@ public final class DefaultIngestionSource implements IngestionSource {
         }
 
         return enrichResult(result, resolvedRequest, policy, resolvedMode);
-    }
-
-    private DefaultIngestionRequest asDefaultRequest(IngestionRequest request) {
-
-        Objects.requireNonNull(request, "request");
-        if (!(request instanceof DefaultIngestionRequest)) {
-            throw new IllegalArgumentException(
-                    "Unsupported ingestion request type: " + request.getClass().getName()
-            );
-        }
-        return (DefaultIngestionRequest) request;
     }
 
     private void validateModeCompatibility(IngestionMode mode) {
@@ -140,7 +129,7 @@ public final class DefaultIngestionSource implements IngestionSource {
     }
 
     private IngestionResult dryRunResult(
-            DefaultIngestionRequest request,
+            IngestionRequest request,
             FetchPolicy policy
     ) {
 
@@ -166,7 +155,7 @@ public final class DefaultIngestionSource implements IngestionSource {
 
     private IngestionResult enrichResult(
             IngestionResult result,
-            DefaultIngestionRequest request,
+            IngestionRequest request,
             FetchPolicy policy,
             IngestionMode mode
     ) {
