@@ -1,5 +1,6 @@
 package io.argus.spring.boot.autoconfigure;
 
+import io.argus.agent.DefaultAgentRunner;
 import io.argus.core.audit.AuditLog;
 import io.argus.core.memory.Memory;
 import io.argus.ingestion.audit.AuditingIngestionOrchestrator;
@@ -33,9 +34,10 @@ import org.springframework.context.annotation.Bean;
  *
  * <p>
  * This module is the Spring integration boundary for the framework-agnostic
- * runtime and ingestion layers. The goal is starter-style activation:
- * importing the starter should yield a coherent local runtime plus a usable
- * default ingestion pipeline without manual bean assembly.
+ * runtime, ingestion, and minimal agent execution layers. The goal is
+ * starter-style activation: importing the starter should yield a coherent
+ * local runtime plus usable default ingestion and agent infrastructure
+ * without manual bean assembly.
  *
  * <p>
  * Every bean in this configuration backs off cleanly so applications can
@@ -131,6 +133,12 @@ public class ArgusAutoConfiguration {
                 ),
                 ingestionAuditPublisher
         );
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public DefaultAgentRunner argusAgentRunner(Memory memory, AuditLog auditLog) {
+        return new DefaultAgentRunner(memory, auditLog);
     }
 
     @Bean

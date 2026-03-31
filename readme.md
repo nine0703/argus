@@ -10,7 +10,7 @@ ARGUS 是一个生产级的 Java 运行时，专为基于代理的系统中**可
 |------|------|
 | `argus-core` | 核心基础能力（Action、Agent、Memory、Observation） |
 | `argus-ingestion` | 网络知识获取（Fetch、Parse、Policy） |
-| `argus-agent` | AI 代理集成支持 |
+| `argus-agent` | AI 代理最小执行层与 loop 驱动模型 |
 | `argus-runtime` | 运行时核心实现与默认装配能力 |
 | `argus-spring-boot-autoconfigure` | Spring Boot 自动装配模块 |
 | `argus-spring-boot-starter` | Spring Boot Starter 聚合入口 |
@@ -20,6 +20,7 @@ ARGUS 是一个生产级的 Java 运行时，专为基于代理的系统中**可
 ARGUS 的 Spring Boot 接入采用分层设计：
 
 - `argus-runtime` 提供不绑定 Spring 的运行时核心能力
+- `argus-agent` 提供 loop-driven agent 的默认执行层
 - `argus-spring-boot-autoconfigure` 提供自动装配
 - `argus-spring-boot-starter` 作为业务方导入坐标
 
@@ -49,6 +50,7 @@ ARGUS 的 Spring Boot 接入采用分层设计：
 - `EmbeddingModel`（`HashEmbeddingModel`）
 - `VectorStore`（`InMemoryVectorStore`）
 - `IngestionOrchestrator`
+- `DefaultAgentRunner`
 
 所有 Bean 都采用 `@ConditionalOnMissingBean`，业务侧可以按单个能力点覆盖，而不需要整体替换 starter。
 
@@ -73,9 +75,14 @@ mvn clean package
 public class DemoConfiguration {
 
     private final IngestionOrchestrator ingestionOrchestrator;
+    private final DefaultAgentRunner agentRunner;
 
-    public DemoConfiguration(IngestionOrchestrator ingestionOrchestrator) {
+    public DemoConfiguration(
+            IngestionOrchestrator ingestionOrchestrator,
+            DefaultAgentRunner agentRunner
+    ) {
         this.ingestionOrchestrator = ingestionOrchestrator;
+        this.agentRunner = agentRunner;
     }
 
 }
