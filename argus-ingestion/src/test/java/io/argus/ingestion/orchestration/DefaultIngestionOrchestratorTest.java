@@ -44,6 +44,10 @@ public class DefaultIngestionOrchestratorTest extends TestCase {
         );
 
         assertTrue(result.success());
+        assertEquals("stub", result.metadata().get("fetchProtocol"));
+        assertEquals("TEXT", result.metadata().get("contentType"));
+        assertEquals(10, result.metadata().get("fetchedBytes"));
+        assertEquals(10, result.metadata().get("documentLength"));
         assertEquals(3, result.metadata().get("chunkCount"));
         assertEquals(3, result.metadata().get("vectorCount"));
         assertEquals(3, vectorStore.snapshot().size());
@@ -70,6 +74,7 @@ public class DefaultIngestionOrchestratorTest extends TestCase {
         );
 
         assertTrue(result.success());
+        assertEquals("TEXT", result.metadata().get("contentType"));
         assertEquals(1, result.metadata().get("chunkCount"));
         assertEquals(0, result.metadata().get("vectorCount"));
         assertEquals(0, vectorStore.snapshot().size());

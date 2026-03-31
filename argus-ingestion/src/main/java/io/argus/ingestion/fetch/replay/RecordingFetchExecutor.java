@@ -37,6 +37,11 @@ public class RecordingFetchExecutor implements FetchExecutor {
     }
 
     @Override
+    public boolean supports(FetchProtocol protocol) {
+        return delegate.supports(protocol);
+    }
+
+    @Override
     public FetchResult execute(FetchRequest request) {
 
         long start = System.currentTimeMillis();

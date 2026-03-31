@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -98,7 +99,7 @@ public class DefaultIngestionOrchestrator implements IngestionOrchestrator {
                 command.id(),
                 Instant.now(),
                 true,
-                buildResultMetadata(document, chunks, vectors, records, options)
+                buildResultMetadata(fetchResult, contentType, document, chunks, vectors, records, options)
         );
     }
 
@@ -142,6 +143,8 @@ public class DefaultIngestionOrchestrator implements IngestionOrchestrator {
     }
 
     private Map<String, Object> buildResultMetadata(
+            FetchResult fetchResult,
+            ContentType contentType,
             Document document,
             List<TextChunk> chunks,
             List<EmbeddingVector> vectors,
@@ -152,6 +155,11 @@ public class DefaultIngestionOrchestrator implements IngestionOrchestrator {
         Map<String, Object> metadata = new LinkedHashMap<>();
         metadata.put("documentId", document.id());
         metadata.put("parser", parser.name());
+        metadata.put("fetchProtocol", fetchResult.protocol().name());
+        metadata.put("fetchSuccess", fetchResult.success());
+        metadata.put("contentType", contentType.name());
+        metadata.put("fetchedBytes", fetchResult.body() == null ? 0 : fetchResult.body().length);
+        metadata.put("documentLength", document.content() == null ? 0 : document.content().length());
         metadata.put("chunkCount", chunks.size());
         metadata.put("vectorCount", vectors.size());
         metadata.put("storedVectorCount", options.enableVectorStore() ? records.size() : 0);
@@ -183,7 +191,7 @@ public class DefaultIngestionOrchestrator implements IngestionOrchestrator {
             return ContentType.UNKNOWN;
         }
 
-        String normalized = raw.toLowerCase();
+        String normalized = raw.toLowerCase(Locale.ROOT);
         if (normalized.contains("application/json")) {
             return ContentType.JSON;
         }
@@ -207,7 +215,12 @@ public class DefaultIngestionOrchestrator implements IngestionOrchestrator {
             if (values == null || values.isEmpty()) {
                 return null;
             }
-            return values.get(0);
+
+            String value = values.get(0);
+            if (value == null || value.trim().isEmpty()) {
+                return null;
+            }
+            return value;
         }
 
         return null;

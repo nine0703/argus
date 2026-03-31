@@ -12,17 +12,21 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class InMemoryFetchRecordStore implements FetchRecordStore {
 
-    private final Map<Integer, FetchExecutionRecord> store =
+    private final Map<String, FetchExecutionRecord> store =
             new ConcurrentHashMap<>();
 
     @Override
     public void save(FetchExecutionRecord record) {
-        store.put(record.request().hashCode(), record);
+        store.put(FetchRequestFingerprint.create(record.request()), record);
     }
 
     @Override
     public Optional<FetchExecutionRecord> find(FetchRequest request) {
-        return Optional.ofNullable(store.get(request.hashCode()));
+        return Optional.ofNullable(store.get(FetchRequestFingerprint.create(request)));
+    }
+
+    public int size() {
+        return store.size();
     }
 
 }   // Class end.

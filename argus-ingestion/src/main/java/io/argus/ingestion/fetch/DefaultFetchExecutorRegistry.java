@@ -1,6 +1,8 @@
 package io.argus.ingestion.fetch;
 
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -13,12 +15,20 @@ public class DefaultFetchExecutorRegistry implements FetchExecutorRegistry {
 
     @Override
     public void register(FetchExecutor executor) {
-        executors.put(executor.protocol().name(), executor);
+
+        Objects.requireNonNull(executor, "executor");
+        String protocol = normalize(executor.protocol());
+        FetchExecutor existing = executors.putIfAbsent(protocol, executor);
+        if (existing != null) {
+            throw new IllegalStateException(
+                    "Duplicate FetchExecutor registered for protocol: " + protocol
+            );
+        }
     }
 
     @Override
     public FetchExecutor get(FetchProtocol protocol) {
-        FetchExecutor executor = executors.get(protocol.name());
+        FetchExecutor executor = executors.get(normalize(protocol));
         if (executor == null) {
             throw new IllegalStateException(
                     "No FetchExecutor registered for protocol: " + protocol.name()
@@ -28,8 +38,18 @@ public class DefaultFetchExecutorRegistry implements FetchExecutorRegistry {
     }
 
     @Override
+    public boolean supports(FetchProtocol protocol) {
+        return executors.containsKey(normalize(protocol));
+    }
+
+    @Override
     public FetchResult execute(FetchRequest request) {
         return get(request.protocol()).execute(request);
+    }
+
+    private String normalize(FetchProtocol protocol) {
+        Objects.requireNonNull(protocol, "protocol");
+        return protocol.name().toLowerCase(Locale.ROOT);
     }
 
 }   // Class end.

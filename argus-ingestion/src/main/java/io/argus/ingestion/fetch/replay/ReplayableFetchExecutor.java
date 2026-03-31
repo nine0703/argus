@@ -34,6 +34,11 @@ public class ReplayableFetchExecutor implements FetchExecutor {
     }
 
     @Override
+    public boolean supports(FetchProtocol protocol) {
+        return delegate.supports(protocol);
+    }
+
+    @Override
     public FetchResult execute(FetchRequest request) {
 
         Optional<FetchExecutionRecord> existing = store.find(request);
@@ -41,13 +46,15 @@ public class ReplayableFetchExecutor implements FetchExecutor {
         switch (mode) {
 
             case REPLAY_ONLY:
-                return replay(existing.orElseThrow(() ->
-                        new IllegalStateException("No recorded execution found")
+                return replay(request, existing.orElseThrow(() ->
+                        new IllegalStateException(
+                                "No recorded execution found for request: " + request.resource()
+                        )
                 ));
 
             case HYBRID:
                 if (existing.isPresent()) {
-                    return replay(existing.get());
+                    return replay(request, existing.get());
                 }
                 break;
 
@@ -60,11 +67,13 @@ public class ReplayableFetchExecutor implements FetchExecutor {
     }
 
 
-    private FetchResult replay(FetchExecutionRecord record) {
+    private FetchResult replay(FetchRequest request, FetchExecutionRecord record) {
 
         if (record.isFailure()) {
             throw new IllegalStateException(
-                    "Recorded execution was failure: "
+                    "Recorded execution was failure for "
+                            + request.resource()
+                            + ": "
                             + record.failure().type()
                             + " - "
                             + record.failure().message()

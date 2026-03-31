@@ -21,6 +21,11 @@ public interface FetchExecutorRegistry {
     FetchExecutor get(FetchProtocol protocol);
 
     /**
+     * Whether an executor is registered for the given protocol.
+     */
+    boolean supports(FetchProtocol protocol);
+
+    /**
      * Execute a request.
      */
     FetchResult execute(FetchRequest request);

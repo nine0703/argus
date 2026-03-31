@@ -14,6 +14,8 @@ import java.util.Objects;
  */
 public class RegistryBackedFetchExecutor implements FetchExecutor {
 
+    private static final FetchProtocol REGISTRY = () -> "registry";
+
     private final FetchExecutorRegistry registry;
 
     public RegistryBackedFetchExecutor(FetchExecutorRegistry registry) {
@@ -22,9 +24,12 @@ public class RegistryBackedFetchExecutor implements FetchExecutor {
 
     @Override
     public FetchProtocol protocol() {
-        throw new UnsupportedOperationException(
-                "RegistryBackedFetchExecutor does not expose a single protocol"
-        );
+        return REGISTRY;
+    }
+
+    @Override
+    public boolean supports(FetchProtocol protocol) {
+        return registry.supports(protocol);
     }
 
     @Override
