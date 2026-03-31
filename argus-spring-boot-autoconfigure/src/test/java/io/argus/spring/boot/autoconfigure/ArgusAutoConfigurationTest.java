@@ -34,7 +34,8 @@ public class ArgusAutoConfigurationTest extends TestCase {
     public void testShouldAutoConfigureArgusRuntimeAndIngestionBeans() {
 
         contextRunner.run(context -> {
-            assertNotNull(context.getBean(ArgusRuntime.class));
+            ArgusRuntime runtime = context.getBean(ArgusRuntime.class);
+            assertNotNull(runtime);
             assertNotNull(context.getBean(Memory.class));
             assertNotNull(context.getBean(AuditLog.class));
             assertNotNull(context.getBean(FetchAuditPublisher.class));
@@ -47,7 +48,10 @@ public class ArgusAutoConfigurationTest extends TestCase {
             assertNotNull(context.getBean(VectorStore.class));
             assertNotNull(context.getBean(IngestionOrchestrator.class));
             assertNotNull(context.getBean(AgentRunner.class));
-            assertNotNull(context.getBean(ArgusRuntime.class).agentRunner());
+            assertNotNull(runtime.ingestionAuditPublisher());
+            assertNotNull(runtime.fetchExecutor());
+            assertNotNull(runtime.ingestionOrchestrator());
+            assertNotNull(runtime.agentRunner());
         });
     }
 

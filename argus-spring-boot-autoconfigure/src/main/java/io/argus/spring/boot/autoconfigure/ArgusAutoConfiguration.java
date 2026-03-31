@@ -3,7 +3,6 @@ package io.argus.spring.boot.autoconfigure;
 import io.argus.agent.AgentRunner;
 import io.argus.core.audit.AuditLog;
 import io.argus.core.memory.Memory;
-import io.argus.ingestion.audit.AuditingIngestionOrchestrator;
 import io.argus.ingestion.audit.IngestionAuditPublisher;
 import io.argus.ingestion.audit.fetch.FetchAuditPublisher;
 import io.argus.ingestion.domain.chunk.ChunkStrategy;
@@ -14,14 +13,10 @@ import io.argus.ingestion.domain.vector.InMemoryVectorStore;
 import io.argus.ingestion.domain.vector.VectorStore;
 import io.argus.ingestion.fetch.FetchExecutor;
 import io.argus.ingestion.fetch.FetchExecutorRegistry;
-import io.argus.ingestion.fetch.RegistryBackedFetchExecutor;
-import io.argus.ingestion.orchestration.DefaultIngestionOrchestrator;
 import io.argus.ingestion.orchestration.IngestionOrchestrator;
 import io.argus.ingestion.parse.Parser;
-import io.argus.ingestion.parse.SimpleDocumentParser;
 import io.argus.runtime.ArgusRuntime;
 import io.argus.runtime.ArgusRuntimeFactory;
-import io.argus.runtime.AuditLogBackedIngestionAuditPublisher;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -74,7 +69,7 @@ public class ArgusAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public IngestionAuditPublisher argusIngestionAuditPublisher(AuditLog auditLog) {
-        return new AuditLogBackedIngestionAuditPublisher(auditLog);
+        return ArgusRuntimeFactory.createDefaultIngestionAuditPublisher(auditLog);
     }
 
     @Bean
@@ -86,13 +81,13 @@ public class ArgusAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public FetchExecutor argusFetchExecutor(FetchExecutorRegistry registry) {
-        return new RegistryBackedFetchExecutor(registry);
+        return ArgusRuntimeFactory.createDefaultFetchExecutor(registry);
     }
 
     @Bean
     @ConditionalOnMissingBean
     public Parser argusParser() {
-        return new SimpleDocumentParser();
+        return ArgusRuntimeFactory.createDefaultParser();
     }
 
     @Bean
@@ -123,14 +118,12 @@ public class ArgusAutoConfiguration {
             VectorStore vectorStore,
             IngestionAuditPublisher ingestionAuditPublisher
     ) {
-        return new AuditingIngestionOrchestrator(
-                new DefaultIngestionOrchestrator(
-                        fetchExecutor,
-                        parser,
-                        chunkStrategy,
-                        embeddingModel,
-                        vectorStore
-                ),
+        return ArgusRuntimeFactory.createDefaultIngestionOrchestrator(
+                fetchExecutor,
+                parser,
+                chunkStrategy,
+                embeddingModel,
+                vectorStore,
                 ingestionAuditPublisher
         );
     }
@@ -147,14 +140,20 @@ public class ArgusAutoConfiguration {
             Memory memory,
             AuditLog auditLog,
             FetchAuditPublisher fetchAuditPublisher,
+            IngestionAuditPublisher ingestionAuditPublisher,
             FetchExecutorRegistry fetchExecutorRegistry,
+            FetchExecutor fetchExecutor,
+            IngestionOrchestrator ingestionOrchestrator,
             AgentRunner agentRunner
     ) {
         return ArgusRuntimeFactory.createRuntime(
                 memory,
                 auditLog,
                 fetchAuditPublisher,
+                ingestionAuditPublisher,
                 fetchExecutorRegistry,
+                fetchExecutor,
+                ingestionOrchestrator,
                 agentRunner
         );
     }

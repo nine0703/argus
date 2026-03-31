@@ -50,7 +50,9 @@ ARGUS 的 Spring Boot 接入采用分层设计：
 - `EmbeddingModel`（`HashEmbeddingModel`）
 - `VectorStore`（`InMemoryVectorStore`）
 - `IngestionOrchestrator`
-- `AgentRunner`（默认实现为 `DefaultAgentRunner`）
+- `AgentRunner`
+
+`ArgusRuntime` 会聚合上述关键能力，因此业务侧既可以按 Bean 单点注入，也可以直接以运行时容器为统一入口。
 
 所有 Bean 都采用 `@ConditionalOnMissingBean`，业务侧可以按单个能力点覆盖，而不需要整体替换 starter。
 
@@ -74,15 +76,10 @@ mvn clean package
 @Configuration
 public class DemoConfiguration {
 
-    private final IngestionOrchestrator ingestionOrchestrator;
-    private final AgentRunner agentRunner;
+    private final ArgusRuntime runtime;
 
-    public DemoConfiguration(
-            IngestionOrchestrator ingestionOrchestrator,
-            AgentRunner agentRunner
-    ) {
-        this.ingestionOrchestrator = ingestionOrchestrator;
-        this.agentRunner = agentRunner;
+    public DemoConfiguration(ArgusRuntime runtime) {
+        this.runtime = runtime;
     }
 
 }
