@@ -50,6 +50,9 @@
 - Add focused tests for every newly completed execution path.
 - Prefer deterministic local tests.
 - Avoid network-dependent integration tests unless the behavior being added is explicitly network-facing and can be exercised with a local fixture or embedded server.
+- Maven command for this repository is `C:/dev/apache-maven-3.6.3/bin/mvn.cmd`.
+- Maven settings files for this repository are located under `C:/dev/maven-env/conf`.
+- Default Maven settings file for this repository is `C:/dev/maven-env/conf/settings-public.xml`.
 
 ## Documentation Rules
 
