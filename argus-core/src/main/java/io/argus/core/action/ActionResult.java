@@ -1,8 +1,7 @@
 package io.argus.core.action;
 
 import io.argus.core.model.Metadata;
-
-import java.time.Instant;
+import io.argus.core.model.Timestamped;
 
 /**
  * Represents the authoritative outcome of executing an {@link Action}.
@@ -16,17 +15,12 @@ import java.time.Instant;
  * @author TK.ENDO
  * @since 2026-02-10 周二 14:03
  */
-public interface ActionResult {
+public interface ActionResult extends Timestamped {
 
     /**
      * Whether the action execution completed successfully.
      */
     boolean success();
-
-    /**
-     * When the execution result was observed.
-     */
-    Instant timestamp();
 
     /**
      * Additional execution metadata for audit or replay.

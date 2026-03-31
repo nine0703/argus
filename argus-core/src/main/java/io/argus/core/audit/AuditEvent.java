@@ -1,12 +1,16 @@
 package io.argus.core.audit;
 
+import io.argus.core.model.Identifier;
 import io.argus.core.model.Metadata;
+import io.argus.core.model.Timestamped;
+
+import java.time.Instant;
 
 /**
  * @author TK.ENDO
  * @since 2026-02-10 周二 14:04
  */
-public final class AuditEvent {
+public final class AuditEvent implements Identifier, Timestamped {
 
     private final String id;
     private final AuditLevel level;
@@ -36,6 +40,11 @@ public final class AuditEvent {
         return id;
     }
 
+    @Override
+    public String identifier() {
+        return id;
+    }
+
     public AuditLevel getLevel() {
         return level;
     }
@@ -54,6 +63,11 @@ public final class AuditEvent {
 
     public long getTimestamp() {
         return timestamp;
+    }
+
+    @Override
+    public Instant timestamp() {
+        return Instant.ofEpochMilli(timestamp);
     }
     // equals / hashCode / toString 建议手写或 Lombok @EqualsAndHashCode
 

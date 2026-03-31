@@ -1,9 +1,9 @@
 package io.argus.ingestion.source;
 
 import io.argus.core.observation.Observation;
+import io.argus.core.model.Timestamped;
 
 import java.io.Serializable;
-import java.time.Instant;
 import java.util.Map;
 
 /**
@@ -17,17 +17,12 @@ import java.util.Map;
  * @author TK.ENDO
  * @since 2026-02-10 周二 14:57
  */
-public interface IngestionResult extends Serializable {
+public interface IngestionResult extends Serializable, Timestamped {
 
     /**
      * Returns the ingestion command or request identifier associated with this result.
      */
     String requestId();
-
-    /**
-     * Returns the observed completion timestamp of this ingestion result.
-     */
-    Instant timestamp();
 
     /**
      * Returns whether the ingestion operation completed successfully.

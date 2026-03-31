@@ -1,12 +1,16 @@
 package io.argus.core.memory;
 
+import io.argus.core.model.Identifier;
 import io.argus.core.model.Metadata;
+import io.argus.core.model.Timestamped;
+
+import java.time.Instant;
 
 /**
  * @author TK.ENDO
  * @since 2026-02-10 周二 14:04
  */
-public final class MemoryEntry {
+public final class MemoryEntry implements Identifier, Timestamped {
 
     private final String id;
     private final MemoryScope scope;
@@ -32,6 +36,11 @@ public final class MemoryEntry {
         return id;
     }
 
+    @Override
+    public String identifier() {
+        return id;
+    }
+
     public MemoryScope getScope() {
         return scope;
     }
@@ -46,6 +55,11 @@ public final class MemoryEntry {
 
     public long getTimestamp() {
         return timestamp;
+    }
+
+    @Override
+    public Instant timestamp() {
+        return Instant.ofEpochMilli(timestamp);
     }
 
     // equals / hashCode / toString 建议手写或 Lombok @EqualsAndHashCode
