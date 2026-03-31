@@ -1,5 +1,7 @@
 package io.argus.runtime;
 
+import io.argus.agent.AgentRunner;
+import io.argus.agent.DefaultAgentRunner;
 import io.argus.core.audit.AuditLog;
 import io.argus.core.audit.InMemoryAuditLog;
 import io.argus.core.memory.InMemoryMemory;
@@ -21,15 +23,13 @@ import io.argus.ingestion.fetch.protocol.http.HttpFetchExecutor;
  *   <li>in-memory {@link AuditLog}</li>
  *   <li>audit-backed fetch publication</li>
  *   <li>HTTP and FTP fetch executor registration</li>
+ *   <li>default in-process {@link AgentRunner}</li>
  * </ul>
  *
  * <p>
  * The produced runtime is intentionally minimal and deterministic,
  * suitable for starter auto-configuration and local embedding.
  *
- * <p>
- * 该工厂提供 ARGUS 的默认本地运行时装配，
- * 供 Spring Boot 自动装配模块和非 Spring 场景共同复用。
  * @author TK.ENDO
  * @since 2026-03-31 周二 17:06
  */
@@ -42,16 +42,16 @@ public final class ArgusRuntimeFactory {
 
         AuditLog auditLog = createDefaultAuditLog();
         Memory memory = createDefaultMemory();
-        FetchAuditPublisher fetchAuditPublisher =
-                createDefaultFetchAuditPublisher(auditLog);
-        FetchExecutorRegistry fetchExecutorRegistry =
-                createDefaultFetchExecutorRegistry(fetchAuditPublisher);
+        FetchAuditPublisher fetchAuditPublisher = createDefaultFetchAuditPublisher(auditLog);
+        FetchExecutorRegistry fetchExecutorRegistry = createDefaultFetchExecutorRegistry(fetchAuditPublisher);
+        AgentRunner agentRunner = createDefaultAgentRunner(memory, auditLog);
 
         return createRuntime(
                 memory,
                 auditLog,
                 fetchAuditPublisher,
-                fetchExecutorRegistry
+                fetchExecutorRegistry,
+                agentRunner
         );
     }
 
@@ -67,17 +67,23 @@ public final class ArgusRuntimeFactory {
         return new AuditLogBackedFetchAuditPublisher(auditLog);
     }
 
+    public static AgentRunner createDefaultAgentRunner(Memory memory, AuditLog auditLog) {
+        return new DefaultAgentRunner(memory, auditLog);
+    }
+
     public static ArgusRuntime createRuntime(
             Memory memory,
             AuditLog auditLog,
             FetchAuditPublisher fetchAuditPublisher,
-            FetchExecutorRegistry fetchExecutorRegistry
+            FetchExecutorRegistry fetchExecutorRegistry,
+            AgentRunner agentRunner
     ) {
         return new ArgusRuntime(
                 memory,
                 auditLog,
                 fetchAuditPublisher,
-                fetchExecutorRegistry
+                fetchExecutorRegistry,
+                agentRunner
         );
     }
 

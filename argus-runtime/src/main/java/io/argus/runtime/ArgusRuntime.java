@@ -1,5 +1,6 @@
 package io.argus.runtime;
 
+import io.argus.agent.AgentRunner;
 import io.argus.core.audit.AuditLog;
 import io.argus.core.memory.Memory;
 import io.argus.ingestion.audit.fetch.FetchAuditPublisher;
@@ -11,23 +12,20 @@ import java.util.Objects;
  * Immutable container of the core runtime infrastructure used by ARGUS.
  *
  * <p>
- * {@code ArgusRuntime} groups the minimum set of runtime services required
- * to execute agent-oriented ingestion workflows:
+ * {@code ArgusRuntime} groups the minimum set of runtime services required to
+ * execute agent-oriented ingestion workflows:
  * <ul>
  *   <li>{@link Memory} for recall and local fact storage</li>
  *   <li>{@link AuditLog} for authoritative audit artifacts</li>
  *   <li>{@link FetchAuditPublisher} for fetch lifecycle publication</li>
  *   <li>{@link FetchExecutorRegistry} for protocol-based fetch dispatch</li>
+ *   <li>{@link AgentRunner} for loop-driven agent execution</li>
  * </ul>
  *
  * <p>
  * This type is intentionally framework-agnostic.
  * Spring Boot integration is provided by dedicated starter modules.
  *
- * <p>
- * {@code ArgusRuntime} 是 ARGUS 运行时基础设施的最小聚合单元，
- * 负责承载内存、审计、抓取审计发布与抓取执行注册表。
- * 它本身不依赖 Spring，由外层自动装配模块负责接入框架。
  * @author TK.ENDO
  * @since 2026-03-31 周二 17:05
  */
@@ -37,19 +35,20 @@ public final class ArgusRuntime {
     private final AuditLog auditLog;
     private final FetchAuditPublisher fetchAuditPublisher;
     private final FetchExecutorRegistry fetchExecutorRegistry;
+    private final AgentRunner agentRunner;
 
     public ArgusRuntime(
             Memory memory,
             AuditLog auditLog,
             FetchAuditPublisher fetchAuditPublisher,
-            FetchExecutorRegistry fetchExecutorRegistry
+            FetchExecutorRegistry fetchExecutorRegistry,
+            AgentRunner agentRunner
     ) {
         this.memory = Objects.requireNonNull(memory, "memory");
         this.auditLog = Objects.requireNonNull(auditLog, "auditLog");
-        this.fetchAuditPublisher =
-                Objects.requireNonNull(fetchAuditPublisher, "fetchAuditPublisher");
-        this.fetchExecutorRegistry =
-                Objects.requireNonNull(fetchExecutorRegistry, "fetchExecutorRegistry");
+        this.fetchAuditPublisher = Objects.requireNonNull(fetchAuditPublisher, "fetchAuditPublisher");
+        this.fetchExecutorRegistry = Objects.requireNonNull(fetchExecutorRegistry, "fetchExecutorRegistry");
+        this.agentRunner = Objects.requireNonNull(agentRunner, "agentRunner");
     }
 
     public Memory memory() {
@@ -66,6 +65,10 @@ public final class ArgusRuntime {
 
     public FetchExecutorRegistry fetchExecutorRegistry() {
         return fetchExecutorRegistry;
+    }
+
+    public AgentRunner agentRunner() {
+        return agentRunner;
     }
 
 } // Class end.

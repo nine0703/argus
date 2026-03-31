@@ -26,12 +26,12 @@ import java.util.UUID;
  * <p>
  * The runner executes one explicit loop step at a time until the loop stops,
  * the agent reaches a terminal state, or a configured safety limit is hit.
- * Each step is optionally bridged into audit and memory infrastructure.
+ * Each step is bridged into audit and memory infrastructure.
  *
  * @author TK.ENDO
  * @since 2026-03-31 周二 20:08
  */
-public class DefaultAgentRunner {
+public class DefaultAgentRunner implements AgentRunner {
 
     private final Memory memory;
     private final AuditLog auditLog;
@@ -41,6 +41,7 @@ public class DefaultAgentRunner {
         this.auditLog = Objects.requireNonNull(auditLog, "auditLog");
     }
 
+    @Override
     public AgentRunResult run(LoopDrivenAgent agent, int maxSteps) {
 
         Objects.requireNonNull(agent, "agent");

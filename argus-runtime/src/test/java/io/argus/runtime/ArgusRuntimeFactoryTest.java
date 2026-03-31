@@ -1,5 +1,6 @@
 package io.argus.runtime;
 
+import io.argus.agent.DefaultAgentRunner;
 import io.argus.ingestion.fetch.DefaultFetchExecutorRegistry;
 import junit.framework.TestCase;
 
@@ -17,7 +18,9 @@ public class ArgusRuntimeFactoryTest extends TestCase {
         assertNotNull(runtime.auditLog());
         assertNotNull(runtime.fetchAuditPublisher());
         assertNotNull(runtime.fetchExecutorRegistry());
+        assertNotNull(runtime.agentRunner());
         assertTrue(runtime.fetchExecutorRegistry() instanceof DefaultFetchExecutorRegistry);
+        assertTrue(runtime.agentRunner() instanceof DefaultAgentRunner);
     }
 
 } // Class end.

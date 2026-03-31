@@ -1,6 +1,6 @@
 package io.argus.spring.boot.autoconfigure;
 
-import io.argus.agent.DefaultAgentRunner;
+import io.argus.agent.AgentRunner;
 import io.argus.core.audit.AuditLog;
 import io.argus.core.memory.InMemoryMemory;
 import io.argus.core.memory.Memory;
@@ -46,7 +46,8 @@ public class ArgusAutoConfigurationTest extends TestCase {
             assertNotNull(context.getBean(EmbeddingModel.class));
             assertNotNull(context.getBean(VectorStore.class));
             assertNotNull(context.getBean(IngestionOrchestrator.class));
-            assertNotNull(context.getBean(DefaultAgentRunner.class));
+            assertNotNull(context.getBean(AgentRunner.class));
+            assertNotNull(context.getBean(ArgusRuntime.class).agentRunner());
         });
     }
 

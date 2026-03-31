@@ -1,6 +1,6 @@
 package io.argus.spring.boot.autoconfigure;
 
-import io.argus.agent.DefaultAgentRunner;
+import io.argus.agent.AgentRunner;
 import io.argus.core.audit.AuditLog;
 import io.argus.core.memory.Memory;
 import io.argus.ingestion.audit.AuditingIngestionOrchestrator;
@@ -137,8 +137,8 @@ public class ArgusAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public DefaultAgentRunner argusAgentRunner(Memory memory, AuditLog auditLog) {
-        return new DefaultAgentRunner(memory, auditLog);
+    public AgentRunner argusAgentRunner(Memory memory, AuditLog auditLog) {
+        return ArgusRuntimeFactory.createDefaultAgentRunner(memory, auditLog);
     }
 
     @Bean
@@ -147,13 +147,15 @@ public class ArgusAutoConfiguration {
             Memory memory,
             AuditLog auditLog,
             FetchAuditPublisher fetchAuditPublisher,
-            FetchExecutorRegistry fetchExecutorRegistry
+            FetchExecutorRegistry fetchExecutorRegistry,
+            AgentRunner agentRunner
     ) {
         return ArgusRuntimeFactory.createRuntime(
                 memory,
                 auditLog,
                 fetchAuditPublisher,
-                fetchExecutorRegistry
+                fetchExecutorRegistry,
+                agentRunner
         );
     }
 
