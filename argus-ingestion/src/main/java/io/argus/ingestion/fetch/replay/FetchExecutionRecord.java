@@ -3,6 +3,7 @@ package io.argus.ingestion.fetch.replay;
 import io.argus.ingestion.fetch.FetchRequest;
 import io.argus.ingestion.fetch.FetchResult;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
 
@@ -13,7 +14,9 @@ import java.util.Objects;
  * @author TK.ENDO
  * @since 2026-02-11 周三 14:50
  */
-public final class FetchExecutionRecord {
+public final class FetchExecutionRecord implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final FetchRequest request;
     private final FetchResult result;

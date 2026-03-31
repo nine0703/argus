@@ -1,14 +1,14 @@
 package io.argus.spring.boot.autoconfigure;
 
+import io.argus.ingestion.fetch.replay.FetchRecordStoreType;
 import io.argus.ingestion.fetch.replay.FetchReplayMode;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.time.Duration;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Externalized configuration entry for ARGUS Spring Boot integration.
@@ -23,7 +23,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * during container bootstrap rather than during the first runtime request.
  *
  * @author TK.ENDO
- * @since 2026-03-31 鍛ㄤ簩 17:08
+ * @since 2026-03-31
  */
 @ConfigurationProperties(prefix = "argus")
 public class ArgusProperties {
@@ -116,6 +116,7 @@ public class ArgusProperties {
     public static class Fetch {
 
         private FetchReplayMode replayMode = FetchReplayMode.LIVE;
+        private final RecordStore recordStore = new RecordStore();
         private final Policy policy = new Policy();
 
         public FetchReplayMode getReplayMode() {
@@ -126,8 +127,37 @@ public class ArgusProperties {
             this.replayMode = Objects.requireNonNull(replayMode, "replayMode");
         }
 
+        public RecordStore getRecordStore() {
+            return recordStore;
+        }
+
         public Policy getPolicy() {
             return policy;
+        }
+    }
+
+    /**
+     * Property group for fetch replay storage backend selection.
+     */
+    public static class RecordStore {
+
+        private FetchRecordStoreType type = FetchRecordStoreType.MEMORY;
+        private String filePath = "";
+
+        public FetchRecordStoreType getType() {
+            return type;
+        }
+
+        public void setType(FetchRecordStoreType type) {
+            this.type = Objects.requireNonNull(type, "type");
+        }
+
+        public String getFilePath() {
+            return filePath;
+        }
+
+        public void setFilePath(String filePath) {
+            this.filePath = filePath == null ? "" : filePath.trim();
         }
     }
 
@@ -140,6 +170,7 @@ public class ArgusProperties {
         private Duration rateLimit = Duration.ZERO;
         private boolean obeyRobotsTxt;
         private String userAgent = "argus";
+        private Duration robotsCacheTtl = Duration.ofMinutes(10);
 
         public Set<String> getAllowedProtocols() {
             return allowedProtocols;
@@ -181,6 +212,17 @@ public class ArgusProperties {
                 throw new IllegalArgumentException("argus.fetch.policy.user-agent must not be blank");
             }
             this.userAgent = userAgent.trim();
+        }
+
+        public Duration getRobotsCacheTtl() {
+            return robotsCacheTtl;
+        }
+
+        public void setRobotsCacheTtl(Duration robotsCacheTtl) {
+            this.robotsCacheTtl = Objects.requireNonNull(robotsCacheTtl, "robotsCacheTtl");
+            if (this.robotsCacheTtl.isNegative()) {
+                throw new IllegalArgumentException("argus.fetch.policy.robots-cache-ttl must not be negative");
+            }
         }
     }
 

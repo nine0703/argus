@@ -26,6 +26,62 @@
       "sourceType": "io.argus.spring.boot.autoconfigure.ArgusProperties$Ingestion",
       "defaultValue": "default",
       "description": "Namespace assigned to the default in-memory vector store."
+    },
+    {
+      "name": "argus.fetch.replay-mode",
+      "type": "io.argus.ingestion.fetch.replay.FetchReplayMode",
+      "sourceType": "io.argus.spring.boot.autoconfigure.ArgusProperties$Fetch",
+      "defaultValue": "LIVE",
+      "description": "Replay execution mode used by the default fetch executor."
+    },
+    {
+      "name": "argus.fetch.record-store.type",
+      "type": "io.argus.ingestion.fetch.replay.FetchRecordStoreType",
+      "sourceType": "io.argus.spring.boot.autoconfigure.ArgusProperties$RecordStore",
+      "defaultValue": "MEMORY",
+      "description": "Record store backend used by the default replay store."
+    },
+    {
+      "name": "argus.fetch.record-store.file-path",
+      "type": "java.lang.String",
+      "sourceType": "io.argus.spring.boot.autoconfigure.ArgusProperties$RecordStore",
+      "defaultValue": "",
+      "description": "Optional file path used when the replay store type is FILE."
+    },
+    {
+      "name": "argus.fetch.policy.allowed-protocols",
+      "type": "java.util.Set<java.lang.String>",
+      "sourceType": "io.argus.spring.boot.autoconfigure.ArgusProperties$Policy",
+      "defaultValue": [],
+      "description": "Allowed fetch protocol names. Empty means no protocol restriction."
+    },
+    {
+      "name": "argus.fetch.policy.rate-limit",
+      "type": "java.time.Duration",
+      "sourceType": "io.argus.spring.boot.autoconfigure.ArgusProperties$Policy",
+      "defaultValue": "PT0S",
+      "description": "Minimum interval between live requests to the same resource."
+    },
+    {
+      "name": "argus.fetch.policy.obey-robots-txt",
+      "type": "java.lang.Boolean",
+      "sourceType": "io.argus.spring.boot.autoconfigure.ArgusProperties$Policy",
+      "defaultValue": false,
+      "description": "Whether robots.txt should be fetched and enforced before accessing HTTP resources."
+    },
+    {
+      "name": "argus.fetch.policy.user-agent",
+      "type": "java.lang.String",
+      "sourceType": "io.argus.spring.boot.autoconfigure.ArgusProperties$Policy",
+      "defaultValue": "argus",
+      "description": "User-Agent used when evaluating robots.txt rules."
+    },
+    {
+      "name": "argus.fetch.policy.robots-cache-ttl",
+      "type": "java.time.Duration",
+      "sourceType": "io.argus.spring.boot.autoconfigure.ArgusProperties$Policy",
+      "defaultValue": "PT10M",
+      "description": "Cache duration for parsed robots.txt rules."
     }
   ]
 }

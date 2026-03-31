@@ -3,16 +3,17 @@ package io.argus.ingestion.fetch.protocol.http;
 import io.argus.ingestion.fetch.FetchProtocol;
 import io.argus.ingestion.fetch.FetchRequest;
 
+import java.io.Serializable;
 import java.net.URI;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author TK.ENDO
  * @since 2026-02-11 周三 14:35
  */
-public class HttpFetchRequest implements FetchRequest {
+public class HttpFetchRequest implements FetchRequest, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private static final FetchProtocol HTTP = () -> "http";
 
@@ -29,8 +30,8 @@ public class HttpFetchRequest implements FetchRequest {
     ) {
         this.uri = uri;
         this.method = method;
-        this.headers = headers == null ? Collections.emptyMap() : headers;
-        this.body = body;
+        this.headers = copyHeaders(headers);
+        this.body = body == null ? null : body.clone();
     }
 
     @Override
@@ -53,7 +54,23 @@ public class HttpFetchRequest implements FetchRequest {
     }
 
     public byte[] bodyPayload() {
-        return body;
+        return body == null ? null : body.clone();
+    }
+
+    private Map<String, List<String>> copyHeaders(Map<String, List<String>> headers) {
+
+        if (headers == null || headers.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, List<String>> copy = new LinkedHashMap<>();
+        for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
+            List<String> values = entry.getValue() == null
+                    ? Collections.emptyList()
+                    : Collections.unmodifiableList(new ArrayList<>(entry.getValue()));
+            copy.put(entry.getKey(), values);
+        }
+        return Collections.unmodifiableMap(copy);
     }
 
 } // Class end.

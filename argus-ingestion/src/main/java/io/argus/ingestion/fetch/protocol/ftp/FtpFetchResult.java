@@ -3,6 +3,7 @@ package io.argus.ingestion.fetch.protocol.ftp;
 import io.argus.ingestion.fetch.FetchProtocol;
 import io.argus.ingestion.fetch.FetchResult;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +12,9 @@ import java.util.Map;
  * @author TK.ENDO
  * @since 2026-02-11 周三 14:41
  */
-public class FtpFetchResult implements FetchResult {
+public class FtpFetchResult implements FetchResult, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private static final FetchProtocol FTP = () -> "ftp";
 
@@ -25,7 +28,7 @@ public class FtpFetchResult implements FetchResult {
             String serverMessage
     ) {
         this.success = success;
-        this.body = body;
+        this.body = body == null ? null : body.clone();
         this.serverMessage = serverMessage;
     }
 
@@ -36,7 +39,7 @@ public class FtpFetchResult implements FetchResult {
 
     @Override
     public byte[] body() {
-        return body;
+        return body == null ? null : body.clone();
     }
 
     @Override

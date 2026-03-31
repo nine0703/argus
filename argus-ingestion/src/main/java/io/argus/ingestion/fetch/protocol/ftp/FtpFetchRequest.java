@@ -3,6 +3,7 @@ package io.argus.ingestion.fetch.protocol.ftp;
 import io.argus.ingestion.fetch.FetchProtocol;
 import io.argus.ingestion.fetch.FetchRequest;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
@@ -12,7 +13,9 @@ import java.util.Map;
  * @author TK.ENDO
  * @since 2026-02-11 周三 14:39
  */
-public class FtpFetchRequest implements FetchRequest {
+public class FtpFetchRequest implements FetchRequest, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private static final FetchProtocol FTP = () -> "ftp";
 

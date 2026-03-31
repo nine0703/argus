@@ -1,10 +1,14 @@
 package io.argus.ingestion.fetch.replay;
 
+import java.io.Serializable;
+
 /**
  * @author TK.ENDO
  * @since 2026-02-11 周三 15:14
  */
-public final class ExceptionSnapshot {
+public final class ExceptionSnapshot implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final String type;
     private final String message;

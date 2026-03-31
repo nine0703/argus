@@ -5,6 +5,7 @@ import io.argus.ingestion.fetch.replay.FetchReplayMode;
 import io.argus.ingestion.orchestration.IngestionCommand;
 import io.argus.ingestion.orchestration.IngestionOrchestrator;
 import io.argus.ingestion.policy.FetchPolicy;
+import io.argus.ingestion.policy.RobotsTxtService;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -34,6 +35,7 @@ public final class DefaultIngestionSource implements IngestionSource {
     private final IngestionOrchestrator orchestrator;
     private final FetchPolicy defaultFetchPolicy;
     private final FetchReplayMode fetchReplayMode;
+    private final RobotsTxtService robotsTxtService;
     private final ConcurrentMap<String, Instant> lastAccessByResource;
 
     public DefaultIngestionSource(
@@ -41,9 +43,19 @@ public final class DefaultIngestionSource implements IngestionSource {
             FetchPolicy defaultFetchPolicy,
             FetchReplayMode fetchReplayMode
     ) {
+        this(orchestrator, defaultFetchPolicy, fetchReplayMode, null);
+    }
+
+    public DefaultIngestionSource(
+            IngestionOrchestrator orchestrator,
+            FetchPolicy defaultFetchPolicy,
+            FetchReplayMode fetchReplayMode,
+            RobotsTxtService robotsTxtService
+    ) {
         this.orchestrator = Objects.requireNonNull(orchestrator, "orchestrator");
         this.defaultFetchPolicy = Objects.requireNonNull(defaultFetchPolicy, "defaultFetchPolicy");
         this.fetchReplayMode = Objects.requireNonNull(fetchReplayMode, "fetchReplayMode");
+        this.robotsTxtService = robotsTxtService;
         this.lastAccessByResource = new ConcurrentHashMap<>();
     }
 
@@ -105,16 +117,24 @@ public final class DefaultIngestionSource implements IngestionSource {
             );
         }
 
-        if (mode != IngestionMode.LIVE) {
-            return;
+        if (mode == IngestionMode.LIVE) {
+            String key = rateLimitKey(request);
+            Instant now = Instant.now();
+            Instant lastAccess = lastAccessByResource.get(key);
+            if (!policy.rateLimitPolicy().allows(lastAccess, now)) {
+                throw new IllegalStateException(
+                        "Fetch policy rate limit violated for resource: " + request.resource()
+                );
+            }
         }
 
-        String key = rateLimitKey(request);
-        Instant now = Instant.now();
-        Instant lastAccess = lastAccessByResource.get(key);
-        if (!policy.rateLimitPolicy().allows(lastAccess, now)) {
+        if (mode != IngestionMode.DRY_RUN
+                && policy.robotPolicy().obeyRobotsTxt()
+                && isHttp(request)
+                && robotsTxtService != null
+                && !robotsTxtService.isAllowed(request, policy.robotPolicy())) {
             throw new IllegalStateException(
-                    "Fetch policy rate limit violated for resource: " + request.resource()
+                    "robots.txt disallows resource: " + request.resource()
             );
         }
     }
@@ -130,6 +150,7 @@ public final class DefaultIngestionSource implements IngestionSource {
         metadata.put("fetchReplayMode", fetchReplayMode.name());
         metadata.put("resource", request.fetchRequest().resource().toString());
         metadata.put("protocol", request.fetchRequest().protocol().name());
+        metadata.put("robotsChecked", false);
         metadata.put("namespace", request.options().namespace());
         metadata.put("embeddingEnabled", request.options().enableEmbedding());
         metadata.put("vectorStoreEnabled", request.options().enableVectorStore());
@@ -155,6 +176,7 @@ public final class DefaultIngestionSource implements IngestionSource {
         metadata.put("fetchReplayMode", fetchReplayMode.name());
         metadata.put("resource", request.fetchRequest().resource().toString());
         metadata.put("protocol", request.fetchRequest().protocol().name());
+        metadata.put("robotsChecked", policy.robotPolicy().obeyRobotsTxt() && isHttp(request.fetchRequest()));
         applyPolicyMetadata(metadata, policy);
 
         return new DefaultIngestionResult(
@@ -174,6 +196,11 @@ public final class DefaultIngestionSource implements IngestionSource {
 
     private String rateLimitKey(FetchRequest request) {
         return request.resource().toString();
+    }
+
+    private boolean isHttp(FetchRequest request) {
+        String scheme = request.resource().getScheme();
+        return "http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme);
     }
 
 } // Class end.

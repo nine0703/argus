@@ -20,20 +20,22 @@ import io.argus.ingestion.fetch.DefaultFetchExecutorRegistry;
 import io.argus.ingestion.fetch.FetchExecutor;
 import io.argus.ingestion.fetch.FetchExecutorRegistry;
 import io.argus.ingestion.fetch.RegistryBackedFetchExecutor;
-import io.argus.ingestion.fetch.replay.FetchRecordStore;
-import io.argus.ingestion.fetch.replay.FetchReplayMode;
-import io.argus.ingestion.fetch.replay.InMemoryFetchRecordStore;
-import io.argus.ingestion.fetch.replay.RecordingFetchExecutor;
-import io.argus.ingestion.fetch.replay.ReplayableFetchExecutor;
 import io.argus.ingestion.fetch.protocol.ftp.FtpFetchExecutor;
 import io.argus.ingestion.fetch.protocol.http.HttpFetchExecutor;
+import io.argus.ingestion.fetch.replay.*;
 import io.argus.ingestion.orchestration.DefaultIngestionOrchestrator;
 import io.argus.ingestion.orchestration.IngestionOrchestrator;
 import io.argus.ingestion.parse.Parser;
 import io.argus.ingestion.parse.SimpleDocumentParser;
+import io.argus.ingestion.policy.DefaultRobotsTxtService;
 import io.argus.ingestion.policy.FetchPolicy;
+import io.argus.ingestion.policy.RobotsTxtService;
 import io.argus.ingestion.source.DefaultIngestionSource;
 import io.argus.ingestion.source.IngestionSource;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
 
 /**
  * Creates default runtime infrastructure for ARGUS.
@@ -94,10 +96,12 @@ public final class ArgusRuntimeFactory {
                 vectorStore,
                 ingestionAuditPublisher
         );
+        RobotsTxtService robotsTxtService = createDefaultRobotsTxtService(fetchExecutor, Duration.ofMinutes(10));
         IngestionSource ingestionSource = createDefaultIngestionSource(
                 ingestionOrchestrator,
                 fetchPolicy,
-                fetchReplayMode
+                fetchReplayMode,
+                robotsTxtService
         );
         AgentRunner agentRunner = createDefaultAgentRunner(memory, auditLog);
 
@@ -155,8 +159,16 @@ public final class ArgusRuntimeFactory {
         return new InMemoryFetchRecordStore();
     }
 
+    public static FetchRecordStore createFileFetchRecordStore(Path filePath) {
+        return new FileFetchRecordStore(filePath);
+    }
+
     public static FetchReplayMode createDefaultFetchReplayMode() {
         return FetchReplayMode.LIVE;
+    }
+
+    public static Path defaultFetchRecordStorePath() {
+        return Paths.get(System.getProperty("user.home"), ".argus", "fetch-record-store.bin");
     }
 
     public static FetchPolicy createDefaultFetchPolicy() {
@@ -214,12 +226,38 @@ public final class ArgusRuntimeFactory {
         return new DefaultAgentRunner(memory, auditLog);
     }
 
+    public static RobotsTxtService createDefaultRobotsTxtService(
+            FetchExecutor fetchExecutor,
+            Duration cacheTtl
+    ) {
+        return new DefaultRobotsTxtService(fetchExecutor, cacheTtl);
+    }
+
     public static IngestionSource createDefaultIngestionSource(
             IngestionOrchestrator ingestionOrchestrator,
             FetchPolicy fetchPolicy,
             FetchReplayMode fetchReplayMode
     ) {
-        return new DefaultIngestionSource(ingestionOrchestrator, fetchPolicy, fetchReplayMode);
+        return createDefaultIngestionSource(
+                ingestionOrchestrator,
+                fetchPolicy,
+                fetchReplayMode,
+                null
+        );
+    }
+
+    public static IngestionSource createDefaultIngestionSource(
+            IngestionOrchestrator ingestionOrchestrator,
+            FetchPolicy fetchPolicy,
+            FetchReplayMode fetchReplayMode,
+            RobotsTxtService robotsTxtService
+    ) {
+        return new DefaultIngestionSource(
+                ingestionOrchestrator,
+                fetchPolicy,
+                fetchReplayMode,
+                robotsTxtService
+        );
     }
 
     public static ArgusRuntime createRuntime(

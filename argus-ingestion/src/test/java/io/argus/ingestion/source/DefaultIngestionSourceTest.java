@@ -1,5 +1,6 @@
 package io.argus.ingestion.source;
 
+import io.argus.ingestion.fetch.FetchRequest;
 import io.argus.ingestion.fetch.protocol.http.HttpFetchRequest;
 import io.argus.ingestion.fetch.protocol.http.HttpMethod;
 import io.argus.ingestion.fetch.replay.FetchReplayMode;
@@ -8,6 +9,7 @@ import io.argus.ingestion.orchestration.IngestionOrchestrator;
 import io.argus.ingestion.policy.FetchPolicy;
 import io.argus.ingestion.policy.RateLimitPolicy;
 import io.argus.ingestion.policy.RobotPolicy;
+import io.argus.ingestion.policy.RobotsTxtService;
 import junit.framework.TestCase;
 
 import java.net.URI;
@@ -36,6 +38,7 @@ public class DefaultIngestionSourceTest extends TestCase {
         assertTrue(result.success());
         assertEquals("DRY_RUN", result.metadata().get("mode"));
         assertEquals(Boolean.TRUE, result.metadata().get("validated"));
+        assertEquals(Boolean.FALSE, result.metadata().get("robotsChecked"));
         assertEquals(0, orchestrator.invocationCount);
     }
 
@@ -50,7 +53,7 @@ public class DefaultIngestionSourceTest extends TestCase {
         FetchPolicy policy = new FetchPolicy(
                 Set.of("ftp"),
                 RateLimitPolicy.noLimit(),
-                RobotPolicy.permissive("argus-test")
+                RobotPolicy.strict("argus-bot")
         );
 
         try {
@@ -108,6 +111,31 @@ public class DefaultIngestionSourceTest extends TestCase {
         }
     }
 
+    public void testShouldRejectLiveAccessWhenRobotsDisallow() {
+
+        DefaultIngestionSource source = new DefaultIngestionSource(
+                new StubIngestionOrchestrator(),
+                FetchPolicy.unrestricted(),
+                FetchReplayMode.HYBRID,
+                new DenyAllRobotsTxtService()
+        );
+        FetchPolicy policy = new FetchPolicy(
+                Collections.singleton("http"),
+                RateLimitPolicy.noLimit(),
+                RobotPolicy.strict("argus-test")
+        );
+
+        try {
+            source.ingest(request(policy), IngestionMode.LIVE);
+            fail("Expected robots validation to fail");
+        } catch (IllegalStateException expected) {
+            assertEquals(
+                    "robots.txt disallows resource: http://example.com/source",
+                    expected.getMessage()
+            );
+        }
+    }
+
     private DefaultIngestionRequest request(FetchPolicy policy) {
         return new DefaultIngestionRequest(
                 "req-1",
@@ -135,6 +163,14 @@ public class DefaultIngestionSourceTest extends TestCase {
                     true,
                     Collections.singletonMap("delegate", "called")
             );
+        }
+    }
+
+    private static final class DenyAllRobotsTxtService implements RobotsTxtService {
+
+        @Override
+        public boolean isAllowed(FetchRequest request, RobotPolicy policy) {
+            return false;
         }
     }
 

@@ -14,11 +14,13 @@ import io.argus.ingestion.domain.vector.VectorStore;
 import io.argus.ingestion.fetch.FetchExecutor;
 import io.argus.ingestion.fetch.FetchExecutorRegistry;
 import io.argus.ingestion.fetch.replay.FetchRecordStore;
+import io.argus.ingestion.fetch.replay.FetchRecordStoreType;
 import io.argus.ingestion.orchestration.IngestionOrchestrator;
 import io.argus.ingestion.parse.Parser;
 import io.argus.ingestion.policy.FetchPolicy;
 import io.argus.ingestion.policy.RateLimitPolicy;
 import io.argus.ingestion.policy.RobotPolicy;
+import io.argus.ingestion.policy.RobotsTxtService;
 import io.argus.ingestion.source.IngestionSource;
 import io.argus.runtime.ArgusRuntime;
 import io.argus.runtime.ArgusRuntimeFactory;
@@ -28,6 +30,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Spring Boot auto-configuration for the ARGUS runtime stack.
@@ -45,7 +50,7 @@ import org.springframework.context.annotation.Bean;
  * defaults.
  *
  * @author TK.ENDO
- * @since 2026-03-31 鍛ㄤ簩 17:08
+ * @since 2026-03-31
  */
 @AutoConfiguration
 @ConditionalOnClass(ArgusRuntime.class)
@@ -85,7 +90,15 @@ public class ArgusAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public FetchRecordStore argusFetchRecordStore() {
+    public FetchRecordStore argusFetchRecordStore(ArgusProperties properties) {
+        ArgusProperties.RecordStore recordStore = properties.getFetch().getRecordStore();
+        if (recordStore.getType() == FetchRecordStoreType.FILE) {
+            String configuredPath = recordStore.getFilePath();
+            Path filePath = configuredPath == null || configuredPath.isEmpty()
+                    ? ArgusRuntimeFactory.defaultFetchRecordStorePath()
+                    : Paths.get(configuredPath);
+            return ArgusRuntimeFactory.createFileFetchRecordStore(filePath);
+        }
         return ArgusRuntimeFactory.createDefaultFetchRecordStore();
     }
 
@@ -162,15 +175,29 @@ public class ArgusAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    public RobotsTxtService argusRobotsTxtService(
+            FetchExecutor fetchExecutor,
+            ArgusProperties properties
+    ) {
+        return ArgusRuntimeFactory.createDefaultRobotsTxtService(
+                fetchExecutor,
+                properties.getFetch().getPolicy().getRobotsCacheTtl()
+        );
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
     public IngestionSource argusIngestionSource(
             IngestionOrchestrator ingestionOrchestrator,
             FetchPolicy fetchPolicy,
+            RobotsTxtService robotsTxtService,
             ArgusProperties properties
     ) {
         return ArgusRuntimeFactory.createDefaultIngestionSource(
                 ingestionOrchestrator,
                 fetchPolicy,
-                properties.getFetch().getReplayMode()
+                properties.getFetch().getReplayMode(),
+                robotsTxtService
         );
     }
 
