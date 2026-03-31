@@ -1,0 +1,31 @@
+{
+  "properties": [
+    {
+      "name": "argus.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Whether ARGUS starter auto-configuration is enabled."
+    },
+    {
+      "name": "argus.ingestion.chunk-size",
+      "type": "java.lang.Integer",
+      "sourceType": "io.argus.spring.boot.autoconfigure.ArgusProperties$Ingestion",
+      "defaultValue": 1000,
+      "description": "Fixed chunk size used by the default chunk strategy."
+    },
+    {
+      "name": "argus.ingestion.embedding-dimension",
+      "type": "java.lang.Integer",
+      "sourceType": "io.argus.spring.boot.autoconfigure.ArgusProperties$Ingestion",
+      "defaultValue": 16,
+      "description": "Vector dimension used by the default deterministic embedding model."
+    },
+    {
+      "name": "argus.ingestion.vector-namespace",
+      "type": "java.lang.String",
+      "sourceType": "io.argus.spring.boot.autoconfigure.ArgusProperties$Ingestion",
+      "defaultValue": "default",
+      "description": "Namespace assigned to the default in-memory vector store."
+    }
+  ]
+}

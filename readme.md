@@ -33,11 +33,52 @@ ARGUS 的 Spring Boot 接入采用分层设计：
 </dependency>
 ```
 
+## Starter 默认装配
+
+引入 `argus-spring-boot-starter` 后，默认会装配以下本地实现：
+
+- `ArgusRuntime`
+- `Memory`（`InMemoryMemory`）
+- `AuditLog`（`InMemoryAuditLog`）
+- `FetchAuditPublisher`
+- `IngestionAuditPublisher`
+- `FetchExecutorRegistry`
+- `FetchExecutor`
+- `Parser`（`SimpleDocumentParser`）
+- `ChunkStrategy`（`FixedSizeChunkStrategy`）
+- `EmbeddingModel`（`HashEmbeddingModel`）
+- `VectorStore`（`InMemoryVectorStore`）
+- `IngestionOrchestrator`
+
+所有 Bean 都采用 `@ConditionalOnMissingBean`，业务侧可以按单个能力点覆盖，而不需要整体替换 starter。
+
+## 配置项
+
+| 配置项 | 默认值 | 说明 |
+|------|------|------|
+| `argus.enabled` | `true` | 是否启用 ARGUS 自动装配 |
+| `argus.ingestion.chunk-size` | `1000` | 默认分块策略的固定块大小 |
+| `argus.ingestion.embedding-dimension` | `16` | 默认哈希向量模型的维度 |
+| `argus.ingestion.vector-namespace` | `default` | 默认内存向量库命名空间 |
+
 ## 快速开始
 
 ```bash
 # 编译打包
 mvn clean package
+```
+
+```java
+@Configuration
+public class DemoConfiguration {
+
+    private final IngestionOrchestrator ingestionOrchestrator;
+
+    public DemoConfiguration(IngestionOrchestrator ingestionOrchestrator) {
+        this.ingestionOrchestrator = ingestionOrchestrator;
+    }
+
+}
 ```
 
 ## 设计原则

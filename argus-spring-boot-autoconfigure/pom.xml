@@ -12,10 +12,8 @@
     <artifactId>argus-spring-boot-autoconfigure</artifactId>
     <name>argus-spring-boot-autoconfigure</name>
     <description>
-        ARGUS Spring Boot AutoConfiguration
-        ARGUS 的 Spring Boot 自动装配模块。
-        ---
-        为业务应用提供默认 Bean 装配与 Starter 支撑。
+        ARGUS Spring Boot autoconfiguration module.
+        Provides default runtime and ingestion pipeline wiring for starter-based integration.
     </description>
 
     <dependencies>
@@ -28,6 +26,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-autoconfigure</artifactId>
             <version>${spring.boot.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <version>${spring.boot.version}</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

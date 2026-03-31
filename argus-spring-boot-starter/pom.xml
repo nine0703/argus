@@ -12,10 +12,8 @@
     <artifactId>argus-spring-boot-starter</artifactId>
     <name>argus-spring-boot-starter</name>
     <description>
-        ARGUS Spring Boot Starter
-        ARGUS 的 Spring Boot Starter 入口模块。
-        ---
-        业务项目只需引入此模块即可接入 ARGUS 默认自动装配能力。
+        ARGUS Spring Boot starter.
+        Import this module to enable ARGUS default auto-configuration in a Spring Boot application.
     </description>
 
     <dependencies>
