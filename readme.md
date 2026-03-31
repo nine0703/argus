@@ -8,8 +8,8 @@ ARGUS 是一个生产级的 Java 运行时，专为基于代理的系统中**可
 
 | 模块 | 说明 |
 |------|------|
-| `argus-core` | 核心基础能力（Action、Agent、Memory、Observation） |
-| `argus-ingestion` | 网络知识获取（Fetch、Parse、Policy） |
+| `argus-core` | 核心基础能力（Action、Agent、Memory、Observation、Lifecycle） |
+| `argus-ingestion` | 网络知识获取（Fetch、Parse、Policy、Replay） |
 | `argus-agent` | AI 代理最小执行层与 loop 驱动模型 |
 | `argus-runtime` | 运行时核心实现与默认装配能力 |
 | `argus-spring-boot-autoconfigure` | Spring Boot 自动装配模块 |
@@ -56,19 +56,28 @@ ARGUS 的 Spring Boot 接入采用分层设计：
 
 所有 Bean 都采用 `@ConditionalOnMissingBean`，业务侧可以按单个能力点覆盖，而不需要整体替换 starter。
 
+## 生命周期语义
+
+`ArgusRuntime` 现在具备显式生命周期：
+
+- 纯 Java 场景下，`ArgusRuntimeFactory.createDefaultRuntime()` 返回已启动的运行时
+- Spring Boot 场景下，自动装配 Bean 会在容器初始化时调用 `start()`，在容器关闭时调用 `stop()`
+- 生命周期阶段包括 `CREATED`、`STARTING`、`RUNNING`、`STOPPING`、`STOPPED`、`FAILED`
+
+这保证了 starter 导入后的运行时状态是明确的，而不是“Bean 在，但是否可用不确定”。
+
 ## 配置项
 
 | 配置项 | 默认值 | 说明 |
 |------|------|------|
 | `argus.enabled` | `true` | 是否启用 ARGUS 自动装配 |
-| `argus.ingestion.chunk-size` | `1000` | 默认分块策略的固定块大小 |
-| `argus.ingestion.embedding-dimension` | `16` | 默认哈希向量模型的维度 |
-| `argus.ingestion.vector-namespace` | `default` | 默认内存向量库命名空间 |
+| `argus.ingestion.chunk-size` | `1000` | 默认分块策略的固定块大小，必须大于 0 |
+| `argus.ingestion.embedding-dimension` | `16` | 默认哈希向量模型的维度，必须大于 0 |
+| `argus.ingestion.vector-namespace` | `default` | 默认内存向量库命名空间，不能为空白 |
 
 ## 快速开始
 
 ```bash
-# 编译打包
 mvn clean package
 ```
 

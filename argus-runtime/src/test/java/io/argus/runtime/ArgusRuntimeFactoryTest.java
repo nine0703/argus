@@ -1,6 +1,7 @@
 package io.argus.runtime;
 
 import io.argus.agent.AgentRunner;
+import io.argus.core.lifecycle.LifecyclePhase;
 import io.argus.ingestion.audit.IngestionAuditPublisher;
 import io.argus.ingestion.fetch.DefaultFetchExecutorRegistry;
 import io.argus.ingestion.fetch.FetchExecutor;
@@ -25,6 +26,8 @@ public class ArgusRuntimeFactoryTest extends TestCase {
         assertNotNull(runtime.fetchExecutor());
         assertNotNull(runtime.ingestionOrchestrator());
         assertNotNull(runtime.agentRunner());
+        assertEquals(LifecyclePhase.RUNNING, runtime.phase());
+        assertTrue(runtime.isRunning());
         assertTrue(runtime.fetchExecutorRegistry() instanceof DefaultFetchExecutorRegistry);
         assertTrue(runtime.agentRunner() instanceof AgentRunner);
         assertTrue(runtime.fetchExecutor() instanceof FetchExecutor);

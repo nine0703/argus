@@ -2,6 +2,9 @@ package io.argus.runtime;
 
 import io.argus.agent.AgentRunner;
 import io.argus.core.audit.AuditLog;
+import io.argus.core.lifecycle.Lifecycle;
+import io.argus.core.lifecycle.LifecyclePhase;
+import io.argus.core.lifecycle.Stoppable;
 import io.argus.core.memory.Memory;
 import io.argus.ingestion.audit.IngestionAuditPublisher;
 import io.argus.ingestion.audit.fetch.FetchAuditPublisher;
@@ -29,13 +32,17 @@ import java.util.Objects;
  * </ul>
  *
  * <p>
+ * The runtime also exposes an explicit lifecycle so starter wiring and plain
+ * Java embedding can share the same startup and shutdown semantics.
+ *
+ * <p>
  * This type is intentionally framework-agnostic.
  * Spring Boot integration is provided by dedicated starter modules.
  *
  * @author TK.ENDO
  * @since 2026-03-31 周二 17:05
  */
-public final class ArgusRuntime {
+public final class ArgusRuntime implements Lifecycle, Stoppable {
 
     private final Memory memory;
     private final AuditLog auditLog;
@@ -45,6 +52,7 @@ public final class ArgusRuntime {
     private final FetchExecutor fetchExecutor;
     private final IngestionOrchestrator ingestionOrchestrator;
     private final AgentRunner agentRunner;
+    private volatile LifecyclePhase phase;
 
     public ArgusRuntime(
             Memory memory,
@@ -64,6 +72,7 @@ public final class ArgusRuntime {
         this.fetchExecutor = Objects.requireNonNull(fetchExecutor, "fetchExecutor");
         this.ingestionOrchestrator = Objects.requireNonNull(ingestionOrchestrator, "ingestionOrchestrator");
         this.agentRunner = Objects.requireNonNull(agentRunner, "agentRunner");
+        this.phase = LifecyclePhase.CREATED;
     }
 
     public Memory memory() {
@@ -96,6 +105,44 @@ public final class ArgusRuntime {
 
     public AgentRunner agentRunner() {
         return agentRunner;
+    }
+
+    @Override
+    public synchronized LifecyclePhase phase() {
+        return phase;
+    }
+
+    @Override
+    public synchronized ArgusRuntime start() {
+
+        if (phase == LifecyclePhase.RUNNING || phase == LifecyclePhase.STARTING) {
+            return this;
+        }
+        if (phase == LifecyclePhase.STOPPING) {
+            throw new IllegalStateException("runtime is stopping and cannot be started");
+        }
+        if (phase == LifecyclePhase.FAILED) {
+            throw new IllegalStateException("failed runtime must be recreated before start");
+        }
+
+        phase = LifecyclePhase.STARTING;
+        phase = LifecyclePhase.RUNNING;
+        return this;
+    }
+
+    @Override
+    public synchronized void stop() {
+
+        if (phase == LifecyclePhase.STOPPED) {
+            return;
+        }
+        if (phase == LifecyclePhase.CREATED) {
+            phase = LifecyclePhase.STOPPED;
+            return;
+        }
+
+        phase = LifecyclePhase.STOPPING;
+        phase = LifecyclePhase.STOPPED;
     }
 
 } // Class end.

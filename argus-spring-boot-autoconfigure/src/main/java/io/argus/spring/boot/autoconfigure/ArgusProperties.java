@@ -10,6 +10,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * exposing the minimum operational knobs required by the default ingestion
  * pipeline assembled by the starter.
  *
+ * <p>
+ * Setter methods fail fast on invalid values so misconfiguration is surfaced
+ * during container bootstrap rather than during the first runtime request.
+ *
  * @author TK.ENDO
  * @since 2026-03-31 周二 17:08
  */
@@ -60,6 +64,9 @@ public class ArgusProperties {
         }
 
         public void setChunkSize(int chunkSize) {
+            if (chunkSize <= 0) {
+                throw new IllegalArgumentException("argus.ingestion.chunk-size must be positive");
+            }
             this.chunkSize = chunkSize;
         }
 
@@ -68,6 +75,9 @@ public class ArgusProperties {
         }
 
         public void setEmbeddingDimension(int embeddingDimension) {
+            if (embeddingDimension <= 0) {
+                throw new IllegalArgumentException("argus.ingestion.embedding-dimension must be positive");
+            }
             this.embeddingDimension = embeddingDimension;
         }
 
@@ -76,7 +86,10 @@ public class ArgusProperties {
         }
 
         public void setVectorNamespace(String vectorNamespace) {
-            this.vectorNamespace = vectorNamespace;
+            if (vectorNamespace == null || vectorNamespace.trim().isEmpty()) {
+                throw new IllegalArgumentException("argus.ingestion.vector-namespace must not be blank");
+            }
+            this.vectorNamespace = vectorNamespace.trim();
         }
 
     }

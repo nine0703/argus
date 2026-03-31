@@ -134,7 +134,7 @@ public class ArgusAutoConfiguration {
         return ArgusRuntimeFactory.createDefaultAgentRunner(memory, auditLog);
     }
 
-    @Bean
+    @Bean(initMethod = "start", destroyMethod = "stop")
     @ConditionalOnMissingBean
     public ArgusRuntime argusRuntime(
             Memory memory,

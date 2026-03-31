@@ -2,6 +2,7 @@ package io.argus.spring.boot.autoconfigure;
 
 import io.argus.agent.AgentRunner;
 import io.argus.core.audit.AuditLog;
+import io.argus.core.lifecycle.LifecyclePhase;
 import io.argus.core.memory.InMemoryMemory;
 import io.argus.core.memory.Memory;
 import io.argus.ingestion.audit.IngestionAuditPublisher;
@@ -52,6 +53,7 @@ public class ArgusAutoConfigurationTest extends TestCase {
             assertNotNull(runtime.fetchExecutor());
             assertNotNull(runtime.ingestionOrchestrator());
             assertNotNull(runtime.agentRunner());
+            assertEquals(LifecyclePhase.RUNNING, runtime.phase());
         });
     }
 
@@ -92,6 +94,16 @@ public class ArgusAutoConfigurationTest extends TestCase {
                     assertEquals(8, chunkStrategy.chunkSize());
                     assertEquals(6, embeddingModel.dimension());
                     assertEquals("docs", vectorStore.namespace());
+                });
+    }
+
+    public void testShouldRejectInvalidIngestionProperties() {
+
+        contextRunner
+                .withPropertyValues("argus.ingestion.chunk-size=0")
+                .run(context -> {
+                    assertNotNull(context.getStartupFailure());
+                    
                 });
     }
 

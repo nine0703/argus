@@ -89,7 +89,7 @@ public final class ArgusRuntimeFactory {
                 fetchExecutor,
                 ingestionOrchestrator,
                 agentRunner
-        );
+        ).start();
     }
 
     public static Memory createDefaultMemory() {
