@@ -9,7 +9,7 @@ import io.argus.ingestion.fetch.FetchRequest;
 import io.argus.ingestion.fetch.FetchResult;
 import io.argus.ingestion.parse.Parser;
 import io.argus.ingestion.parse.SimpleDocumentParser;
-import io.argus.ingestion.source.DefaultIngestionResult;
+import io.argus.ingestion.source.IngestionResult;
 import junit.framework.TestCase;
 
 import java.net.URI;
@@ -35,7 +35,7 @@ public class DefaultIngestionOrchestratorTest extends TestCase {
                 vectorStore
         );
 
-        DefaultIngestionResult result = (DefaultIngestionResult) orchestrator.ingest(
+        IngestionResult result = orchestrator.ingest(
                 new IngestionCommand(
                         "cmd-1",
                         new StubFetchRequest(),
@@ -61,7 +61,7 @@ public class DefaultIngestionOrchestratorTest extends TestCase {
                 vectorStore
         );
 
-        DefaultIngestionResult result = (DefaultIngestionResult) orchestrator.ingest(
+        IngestionResult result = orchestrator.ingest(
                 new IngestionCommand(
                         "cmd-2",
                         new StubFetchRequest(),
