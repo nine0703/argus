@@ -1,5 +1,6 @@
 package io.argus.agent;
 
+import io.argus.core.action.DefaultActionResult;
 import io.argus.core.action.ActionType;
 import io.argus.core.agent.AgentContext;
 import io.argus.core.agent.AgentLoop;
@@ -13,6 +14,7 @@ import io.argus.core.model.Metadata;
 import io.argus.core.observation.ObservationType;
 import junit.framework.TestCase;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +39,7 @@ public class DefaultAgentRunnerTest extends TestCase {
         List<MemoryEntry> entries = memory.recall(MemoryScope.WORKING);
         assertEquals(2, entries.size());
         assertEquals("RESPONSE", entries.get(1).getMetadata().get("observationType").orElse(null));
+        assertEquals(true, entries.get(1).getMetadata().get("actionSuccess").orElse(null));
         assertEquals(4, auditLog.snapshot().size());
     }
 
@@ -67,6 +70,7 @@ public class DefaultAgentRunnerTest extends TestCase {
             if (counter == 1) {
                 return new LoopResult(
                         new BasicAction(ActionType.DECIDE, new Metadata(Map.of("phase", "plan"))),
+                        new DefaultActionResult(true, Instant.ofEpochMilli(1L), new Metadata(Map.of("step", 1))),
                         new BasicObservation(ObservationType.STATE, new Metadata(Map.of("phase", "running"))),
                         AgentState.RUNNING
                 );
@@ -75,6 +79,7 @@ public class DefaultAgentRunnerTest extends TestCase {
             running = false;
             return new LoopResult(
                     new BasicAction(ActionType.EMIT, new Metadata(Map.of("phase", "emit"))),
+                    new DefaultActionResult(true, Instant.ofEpochMilli(2L), new Metadata(Map.of("step", 2))),
                     new BasicObservation(ObservationType.RESPONSE, new Metadata(Map.of("phase", "done"))),
                     AgentState.COMPLETED
             );
@@ -97,6 +102,7 @@ public class DefaultAgentRunnerTest extends TestCase {
         public LoopResult step(AgentContext context) {
             return new LoopResult(
                     new BasicAction(ActionType.DECIDE, new Metadata(Map.of())),
+                    new DefaultActionResult(true, Instant.ofEpochMilli(3L), new Metadata(Map.of())),
                     new BasicObservation(ObservationType.STATE, new Metadata(Map.of())),
                     AgentState.RUNNING
             );

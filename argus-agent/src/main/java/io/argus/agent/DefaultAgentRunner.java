@@ -91,6 +91,9 @@ public class DefaultAgentRunner implements AgentRunner {
         attributes.put("actionType", result.getAction().getType().name());
         attributes.put("observationType", result.getObservation().getType().name());
         attributes.put("nextState", result.getNextState().name());
+        if (result.getActionResult() != null) {
+            attributes.put("actionSuccess", result.getActionResult().success());
+        }
 
         memory.store(
                 new MemoryEntry(
@@ -116,6 +119,9 @@ public class DefaultAgentRunner implements AgentRunner {
         attributes.put("stepCount", stepCount);
         if (result != null) {
             attributes.put("actionType", result.getAction().getType().name());
+            if (result.getActionResult() != null) {
+                attributes.put("actionSuccess", result.getActionResult().success());
+            }
             attributes.put("observationType", result.getObservation().getType().name());
         }
 

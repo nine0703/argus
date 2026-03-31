@@ -1,6 +1,7 @@
 package io.argus.core.agent;
 
 import io.argus.core.action.Action;
+import io.argus.core.action.ActionResult;
 import io.argus.core.observation.Observation;
 
 /**
@@ -34,6 +35,7 @@ import io.argus.core.observation.Observation;
  * During replay:
  * <ul>
  *   <li>{@link Action} represents the agent's committed intent</li>
+ *   <li>{@link ActionResult} represents the authoritative execution outcome</li>
  *   <li>{@link Observation} represents the committed factual outcome</li>
  *   <li>No external side effects may be re-triggered</li>
  * </ul>
@@ -81,6 +83,10 @@ public final class LoopResult {
      */
     private final Action action;
     /**
+     * Returns the execution result produced for the action.
+     */
+    private final ActionResult actionResult;
+    /**
      * Returns the observation obtained as a result of the action.
      */
     private final Observation observation;
@@ -91,16 +97,30 @@ public final class LoopResult {
 
     public LoopResult(
             Action action,
+            ActionResult actionResult,
             Observation observation,
             AgentState nextState
     ) {
         this.action = action;
+        this.actionResult = actionResult;
         this.observation = observation;
         this.nextState = nextState;
     }
 
+    public LoopResult(
+            Action action,
+            Observation observation,
+            AgentState nextState
+    ) {
+        this(action, null, observation, nextState);
+    }
+
     public Action getAction() {
         return action;
+    }
+
+    public ActionResult getActionResult() {
+        return actionResult;
     }
 
     public Observation getObservation() {
